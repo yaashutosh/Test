@@ -1,18 +1,16 @@
 <!DOCTYPE html>
-
-<html class="light" lang="en"><head>
+<html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Wedding Planner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&amp;family=Playfair+Display:wght@700&amp;display=swap" rel="stylesheet"/>
 <style>
         .material-symbols-outlined {
-            font-variation-settings:
-                'FILL' 0,
-                'wght' 400,
-                'GRAD' 0,
-                'opsz' 24
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
         }
     </style>
 <script id="tailwind-config">
@@ -21,12 +19,16 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ee2b8c",
+                        "primary": "#D4AF37",
                         "background-light": "#fcf8fa",
-                        "background-dark": "#221019",
+                        "background-dark": "#121212",
+                        "surface-dark": "#1E1E1E",
+                        "text-dark-primary": "#F5F5F5",
+                        "text-dark-secondary": "#A0A0A0"
                     },
                     fontFamily: {
-                        "display": ["Manrope", "sans-serif"]
+                        "display": ["Playfair Display", "serif"],
+                        "body": ["Cormorant Garamond", "serif"]
                     },
                     borderRadius: {
                         "DEFAULT": "0.5rem",
@@ -39,26 +41,31 @@
         }
     </script>
 <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
     body {
       min-height: max(884px, 100dvh);
     }
   </style>
   </head>
-<body class="bg-background-light dark:bg-background-dark font-display">
-<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden" style='font-family: Manrope, "Noto Sans", sans-serif;'>
-<header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+<body class="bg-background-dark font-body text-text-dark-primary">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<header class="sticky top-0 z-50 bg-background-dark/80 backdrop-blur-sm">
 <div class="container mx-auto px-4">
 <div class="flex justify-between items-center py-4">
-<a class="text-xl font-bold text-[#1b0d14] dark:text-white" href="#">Blissful Beginnings</a>
+<a class="text-2xl font-bold font-display text-text-dark-primary" href="#">Éclat Events</a>
 <nav class="hidden md:flex items-center space-x-8">
-<a class="text-[#9a4c73] hover:text-primary dark:text-[#f3e7ed] dark:hover:text-primary" href="#">Services</a>
-<a class="text-[#9a4c73] hover:text-primary dark:text-[#f3e7ed] dark:hover:text-primary" href="#">Gallery</a>
-<a class="text-[#9a4c73] hover:text-primary dark:text-[#f3e7ed] dark:hover:text-primary" href="#">Testimonials</a>
-<a class="text-[#9a4c73] hover:text-primary dark:text-[#f3e7ed] dark:hover:text-primary" href="#">Contact</a>
+<a class="text-text-dark-secondary hover:text-primary" href="#">Services</a>
+<a class="text-text-dark-secondary hover:text-primary" href="#">Gallery</a>
+<a class="text-text-dark-secondary hover:text-primary" href="#">Testimonials</a>
+<a class="text-text-dark-secondary hover:text-primary" href="#">Contact</a>
 </nav>
 <div class="flex items-center space-x-4">
-<span class="hidden sm:inline text-sm font-semibold text-[#1b0d14] dark:text-white">Call Us: (555) 123-4567</span>
-<button class="md:hidden flex items-center justify-center text-[#1b0d14] dark:text-white">
+<span class="hidden sm:inline text-sm font-semibold text-text-dark-primary">Call Us: (555) 123-4567</span>
+<button class="md:hidden flex items-center justify-center text-text-dark-primary">
 <span class="material-symbols-outlined">menu</span>
 </button>
 </div>
@@ -66,107 +73,103 @@
 </div>
 </header>
 <main>
-<!-- HeroSection -->
 <div class="@container">
 <div class="@[480px]:p-4">
-<div class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-xl items-center justify-center p-4" data-alt="A beautifully decorated outdoor wedding venue with flowers and elegant seating." style='background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.5) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDHt5ngr-WsuwjPFAunvnHekem8wG30tc3N5yiCl8OF3tbucPL-0_HwguGSFptFWh3Acnv9otDyCHSRADMR9y8cnr8zv9oM-gfhak9rHgZv8gpv7gcel_ThuF8tqnpf4Q1ftfLJ1QnCFkundjsR57_2VBiCYsgtFMKHCWlz0YqHt2whjVorZ_IPTIoPABSO3d7b6LzJ0V0PV6Kh_dswB5qRg6KpEKd3ahc3mmGoPp4ez992YouJRUHfQVyaO2BmW63ZmogSJ7XhKYWe");'>
-<div class="flex flex-col gap-2 text-center">
-<h1 class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
-                                Creating Your Perfect Day, Perfectly.
+<div class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-xl items-center justify-center p-4" data-alt="A beautifully decorated outdoor wedding venue with flowers and elegant seating." style='background-image: linear-gradient(rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.8) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDHt5ngr-WsuwjPFAunvnHekem8wG30tc3N5yiCl8OF3tbucPL-0_HwguGSFptFWh3Acnv9otDyCHSRADMR9y8cnr8zv9oM-gfhak9rHgZv8gpv7gcel_ThuF8tqnpf4Q1ftfLJ1QnCFkundjsR57_2VBiCYsgtFMKHCWlz0YqHt2whjVorZ_IPTIoPABSO3d7b6LzJ0V0PV6Kh_dswB5qRg6KpEKd3ahc3mmGoPp4ez992YouJRUHfQVyaO2BmW63ZmogSJ7XhKYWe");'>
+<div class="flex flex-col gap-4 text-center">
+<h1 class="text-white text-5xl font-display font-bold leading-tight tracking-wide @[480px]:text-6xl">
+                                Curating Unforgettable Moments
                             </h1>
-<h2 class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
-                                Welcome to our world of bespoke wedding planning where your dreams take flight.
+<h2 class="text-text-dark-secondary text-lg font-body leading-relaxed @[480px]:text-xl">
+                                Bespoke wedding planning for the discerning couple.
                             </h2>
 </div>
-<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]">
-<span class="truncate">Schedule a Free Consultation</span>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-6 @[480px]:h-14 @[480px]:px-8 bg-primary text-background-dark text-base font-bold leading-normal tracking-wider hover:bg-opacity-90 transition-all">
+<span class="truncate">Book a Consultation</span>
 </button>
 </div>
 </div>
 </div>
-<!-- FeatureSection -->
-<div class="flex flex-col gap-10 px-4 py-10 @container">
+<div class="flex flex-col gap-12 px-4 py-16 @container bg-background-dark">
 <div class="flex flex-col gap-4 text-center items-center">
-<h1 class="text-[#1b0d14] dark:text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]">
-                        What We Offer
+<h1 class="text-text-dark-primary tracking-wide text-4xl font-display font-bold leading-tight @[480px]:text-5xl max-w-[720px]">
+                        Our Signature Services
                     </h1>
-<p class="text-[#1b0d14] dark:text-[#f3e7ed] text-base font-normal leading-normal max-w-[720px]">
-                        Our passion is to create unforgettable weddings. We handle every detail, so you can enjoy every moment.
+<p class="text-text-dark-secondary text-lg font-body leading-relaxed max-w-[720px]">
+                        With meticulous attention to detail, we orchestrate every facet of your celebration, ensuring a seamless and sublime experience.
                     </p>
 </div>
-<div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 p-0">
-<div class="flex flex-1 gap-3 rounded-lg border border-[#e7cfdb] dark:border-primary/20 bg-background-light dark:bg-background-dark p-4 flex-col items-center text-center">
-<span class="material-symbols-outlined text-primary text-4xl">celebration</span>
-<div class="flex flex-col gap-1">
-<h2 class="text-[#1b0d14] dark:text-white text-base font-bold leading-tight">Bespoke Wedding Design</h2>
-<p class="text-[#9a4c73] dark:text-[#f3e7ed] text-sm font-normal leading-normal">We craft a wedding that is uniquely yours, reflecting your style and personality.</p>
+<div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-8 p-0">
+<div class="flex flex-1 gap-4 rounded-xl border border-primary/20 bg-surface-dark p-6 flex-col items-center text-center hover:border-primary/40 transition-colors">
+<span class="material-symbols-outlined text-primary text-5xl">auto_awesome</span>
+<div class="flex flex-col gap-2">
+<h2 class="text-text-dark-primary text-xl font-bold font-display">Bespoke Wedding Design</h2>
+<p class="text-text-dark-secondary text-base font-body leading-relaxed">Crafting a unique narrative that mirrors your love story, from concept to breathtaking reality.</p>
 </div>
 </div>
-<div class="flex flex-1 gap-3 rounded-lg border border-[#e7cfdb] dark:border-primary/20 bg-background-light dark:bg-background-dark p-4 flex-col items-center text-center">
-<span class="material-symbols-outlined text-primary text-4xl">groups</span>
-<div class="flex flex-col gap-1">
-<h2 class="text-[#1b0d14] dark:text-white text-base font-bold leading-tight">Expert Vendor Coordination</h2>
-<p class="text-[#9a4c73] dark:text-[#f3e7ed] text-sm font-normal leading-normal">We connect you with the best vendors to ensure a high-quality experience.</p>
+<div class="flex flex-1 gap-4 rounded-xl border border-primary/20 bg-surface-dark p-6 flex-col items-center text-center hover:border-primary/40 transition-colors">
+<span class="material-symbols-outlined text-primary text-5xl">diamond</span>
+<div class="flex flex-col gap-2">
+<h2 class="text-text-dark-primary text-xl font-bold font-display">Elite Vendor Curation</h2>
+<p class="text-text-dark-secondary text-base font-body leading-relaxed">Access to our exclusive network of world-class vendors for an unparalleled quality of service.</p>
 </div>
 </div>
-<div class="flex flex-1 gap-3 rounded-lg border border-[#e7cfdb] dark:border-primary/20 bg-background-light dark:bg-background-dark p-4 flex-col items-center text-center">
-<span class="material-symbols-outlined text-primary text-4xl">checklist</span>
-<div class="flex flex-col gap-1">
-<h2 class="text-[#1b0d14] dark:text-white text-base font-bold leading-tight">Seamless Execution</h2>
-<p class="text-[#9a4c73] dark:text-[#f3e7ed] text-sm font-normal leading-normal">From start to finish, we manage all logistics for a stress-free celebration.</p>
+<div class="flex flex-1 gap-4 rounded-xl border border-primary/20 bg-surface-dark p-6 flex-col items-center text-center hover:border-primary/40 transition-colors">
+<span class="material-symbols-outlined text-primary text-5xl">verified</span>
+<div class="flex flex-col gap-2">
+<h2 class="text-text-dark-primary text-xl font-bold font-display">Flawless Execution</h2>
+<p class="text-text-dark-secondary text-base font-body leading-relaxed">Impeccable on-the-day coordination, allowing you to immerse fully in your joyous occasion.</p>
 </div>
 </div>
 </div>
 </div>
-<!-- Carousel -->
-<div class="py-10">
-<div class="flex flex-col gap-4 text-center items-center px-4">
-<h1 class="text-[#1b0d14] dark:text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]">
-                        Words From Our Couples
+<div class="py-16 bg-surface-dark">
+<div class="flex flex-col gap-4 text-center items-center px-4 mb-8">
+<h1 class="text-text-dark-primary tracking-wide text-4xl font-display font-bold leading-tight @[480px]:text-5xl max-w-[720px]">
+                        Love Stories We've Penned
                     </h1>
 </div>
-<div class="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
-<div class="flex items-stretch p-4 gap-4">
-<div class="flex h-full flex-1 flex-col gap-4 rounded-lg min-w-80 bg-background-light dark:bg-background-dark border border-[#e7cfdb] dark:border-primary/20 p-6">
-<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex flex-col" data-alt="A happy couple on their wedding day, smiling at the camera." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB_rDy7H_GNOnxhPDRwUgztgmC6w5wnplIahJQL6qpQooKpA1WMOBn8AHrGhjfXedwVpYA-vmrprmb7DqyedG6gK1XMUXp6X7ATCSCrogCUl9X2gux9_GJU1I7xRuatbkqE3k1pimYYICMtuTY_Wr5ffU0tieTQnBPb4jOPXIkkbDVSQzTqAN6m4EFRUbpHKx-nvVPL1fpwZCsd-0IMGetFm_LT7jn0ch7GKSv0ngsltYCL5KEYHM0b83DD6WkUNIYzqxc_zyApMgJS");'></div>
+<div class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
+<div class="flex items-stretch p-4 gap-8">
+<div class="flex h-full flex-1 flex-col gap-6 rounded-xl min-w-80 bg-background-dark border border-primary/20 p-6">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex flex-col" data-alt="A happy couple on their wedding day, smiling at the camera." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB_rDy7H_GNOnxhPDRwUgztgmC6w5wnplIahJQL6qpQooKpA1WMOBn8AHrGhjfXedwVpYA-vmrprmb7DqyedG6gK1XMUXp6X7ATCSCrogCUl9X2gux9_GJU1I7xRuatbkqE3k1pimYYICMtuTY_Wr5ffU0tieTQnBPb4jOPXIkkbDVSQzTqAN6m4EFRUbpHKx-nvVPL1fpwZCsd-0IMGetFm_LT7jn0ch7GKSv0ngsltYCL5KEYHM0b83DD6WkUNIYzqxc_zyApMgJS");'></div>
 <div>
-<p class="text-[#1b0d14] dark:text-white text-base font-medium leading-normal">"The best day of our lives! Everything was magical, and we didn't have to worry about a thing."</p>
-<p class="text-[#9a4c73] dark:text-[#f3e7ed] text-sm font-normal leading-normal mt-2">- Sarah &amp; Tom</p>
+<p class="text-text-dark-primary text-lg font-body leading-relaxed italic">"An absolute masterpiece. Our day was a symphony of elegance and joy, flawlessly conducted from beginning to end."</p>
+<p class="text-text-dark-secondary text-base font-body mt-4">- Sarah &amp; Tom</p>
 </div>
 </div>
-<div class="flex h-full flex-1 flex-col gap-4 rounded-lg min-w-80 bg-background-light dark:bg-background-dark border border-[#e7cfdb] dark:border-primary/20 p-6">
-<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex flex-col" data-alt="A bride and groom laughing together during their wedding reception." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBulzGNSREyXXlVAc5ANoPwb508QCShcXW3ICeWAvH-jl9NtmeYEsbe6CpXM9oAjJdFssBuQgBOWXgS4eEeMsQJt8WhCAYpfif14SdHkCRwfD0Mcr-YrJB2_LFW1QmCsPXQB4nb6an5AQp8tS3IIDLLSXyeiHts6-3m-ZXr6EgNg48gKF16ydmJuSHan5GpfRxwY6a8754cPBpH-_sSmAPfPQyoT4uixH_5NGEwkT2HRu_OE4Nf5Rax6K8RF4pa4BKOoHH_69SBaM8Q");'></div>
+<div class="flex h-full flex-1 flex-col gap-6 rounded-xl min-w-80 bg-background-dark border border-primary/20 p-6">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex flex-col" data-alt="A bride and groom laughing together during their wedding reception." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBulzGNSREyXXlVAc5ANoPwb508QCShcXW3ICeWAvH-jl9NtmeYEsbe6CpXM9oAjJdFssBuQgBOWXgS4eEeMsQJt8WhCAYpfif14SdHkCRwfD0Mcr-YrJB2_LFW1QmCsPXQB4nb6an5AQp8tS3IIDLLSXyeiHts6-3m-ZXr6EgNg48gKF16ydmJuSHan5GpfRxwY6a8754cPBpH-_sSmAPfPQyoT4uixH_5NGEwkT2HRu_OE4Nf5Rax6K8RF4pa4BKOoHH_69SBaM8Q");'></div>
 <div>
-<p class="text-[#1b0d14] dark:text-white text-base font-medium leading-normal">"Absolutely seamless planning. They brought our vision to life more beautifully than we could have ever imagined."</p>
-<p class="text-[#9a4c73] dark:text-[#f3e7ed] text-sm font-normal leading-normal mt-2">- Emily &amp; James</p>
+<p class="text-text-dark-primary text-lg font-body leading-relaxed italic">"Their vision transformed our dreams into a reality that was more beautiful than we could have ever imagined."</p>
+<p class="text-text-dark-secondary text-base font-body mt-4">- Emily &amp; James</p>
 </div>
 </div>
-<div class="flex h-full flex-1 flex-col gap-4 rounded-lg min-w-80 bg-background-light dark:bg-background-dark border border-[#e7cfdb] dark:border-primary/20 p-6">
-<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex flex-col" data-alt="A couple sharing a romantic moment under a floral archway." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAfy4Cg1U--CvJckn75NBWNoGeBPyjM8LPm5ueRZgEQvWfTtvieYeiKNtLqC8UGK514qhjcMNg3cpmPegoGqvcEQWBxioZjGRugvODm7iEbnWkNBelyEGRNzmzIlmpPm47x4rpJwkg40F3KlRuOTpGGdzDqJkCCE1viSOtyQZ2phgJq1klMtykDAED4fbDv0-SDMFsrOZWJqYyFriNMameV8lq0UYoCvzqgtRJoH5vJAeYz_uhlMb7dGcrHgrgc4eHBfBsUoHNERWMp");'></div>
+<div class="flex h-full flex-1 flex-col gap-6 rounded-xl min-w-80 bg-background-dark border border-primary/20 p-6">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex flex-col" data-alt="A couple sharing a romantic moment under a floral archway." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAfy4Cg1U--CvJckn75NBWNoGeBPyjM8LPm5ueRZgEQvWfTtvieYeiKNtLqC8UGK514qhjcMNg3cpmPegoGqvcEQWBxioZjGRugvODm7iEbnWkNBelyEGRNzmzIlmpPm47x4rpJwkg40F3KlRuOTpGGdzDqJkCCE1viSOtyQZ2phgJq1klMtykDAED4fbDv0-SDMFsrOZWJqYyFriNMameV8lq0UYoCvzqgtRJoH5vJAeYz_uhlMb7dGcrHgrgc4eHBfBsUoHNERWMp");'></div>
 <div>
-<p class="text-[#1b0d14] dark:text-white text-base font-medium leading-normal">"A dream come true. Their attention to detail and creative ideas made our wedding day unforgettable."</p>
-<p class="text-[#9a4c73] dark:text-[#f3e7ed] text-sm font-normal leading-normal mt-2">- Jessica &amp; Chris</p>
+<p class="text-text-dark-primary text-lg font-body leading-relaxed italic">"Every detail was handled with such care and sophistication. We were guests at our own perfect wedding."</p>
+<p class="text-text-dark-secondary text-base font-body mt-4">- Jessica &amp; Chris</p>
 </div>
 </div>
 </div>
 </div>
 </div>
-<!-- CTASection -->
 <div class="@container">
-<div class="flex flex-col justify-end gap-6 px-4 py-10 @[480px]:gap-8 @[480px]:px-10 @[480px]:py-20 bg-[#f3e7ed] dark:bg-primary/20 rounded-xl m-4">
-<div class="flex flex-col gap-2 text-center items-center">
-<h1 class="text-[#1b0d14] dark:text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]">
-                            Ready to Start Planning?
+<div class="flex flex-col justify-end gap-8 px-4 py-16 @[480px]:gap-10 @[480px]:px-10 @[480px]:py-24 bg-primary/10 rounded-xl m-4">
+<div class="flex flex-col gap-4 text-center items-center">
+<h1 class="text-text-dark-primary tracking-wide text-4xl font-display font-bold leading-tight @[480px]:text-5xl max-w-[720px]">
+                            Begin Your Legacy
                         </h1>
-<p class="text-[#1b0d14] dark:text-[#f3e7ed] text-base font-normal leading-normal max-w-[720px]">Get in touch with us to schedule a free consultation.</p>
+<p class="text-text-dark-secondary text-lg font-body leading-relaxed max-w-[720px]">Let us embark on the journey of creating your perfect day. Contact us for a private consultation.</p>
 </div>
 <div class="flex flex-1 justify-center">
 <label class="flex flex-col min-w-40 h-14 max-w-[480px] flex-1 @[480px]:h-16">
-<div class="flex w-full flex-1 items-stretch rounded-xl h-full">
-<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#1b0d14] dark:text-white focus:outline-0 focus:ring-0 border-none bg-background-light dark:bg-background-dark focus:border-none h-full placeholder:text-[#9a4c73] dark:placeholder:text-[#f3e7ed] px-4 rounded-r-none border-r-0 pr-2 text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal" placeholder="Enter your email" value=""/>
-<div class="flex items-center justify-center rounded-r-xl border-l-0 border-none bg-background-light dark:bg-background-dark pr-2">
-<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]">
-<span class="truncate">Get a Quote</span>
+<div class="flex w-full flex-1 items-stretch rounded-full h-full">
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-full text-text-dark-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-surface-dark h-full placeholder:text-text-dark-secondary px-6 pr-2 text-base font-normal leading-normal @[480px]:text-lg" placeholder="Enter your email" value=""/>
+<div class="flex items-center justify-center rounded-r-full bg-surface-dark pr-2">
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 @[480px]:h-12 @[480px]:px-8 bg-primary text-background-dark text-base font-bold leading-normal tracking-wider hover:bg-opacity-90 transition-all">
+<span class="truncate">Request Invite</span>
 </button>
 </div>
 </div>
@@ -174,27 +177,33 @@
 </div>
 </div>
 </div>
-<!-- Footer -->
-<footer class="flex flex-col gap-6 px-5 py-10 text-center @container">
+<footer class="flex flex-col gap-8 px-5 py-12 text-center @container bg-background-dark">
 <div class="flex flex-wrap items-center justify-center gap-6 @[480px]:flex-row @[480px]:justify-around">
-<a class="text-[#9a4c73] dark:text-[#f3e7ed] hover:text-primary dark:hover:text-primary text-base font-normal leading-normal min-w-40" href="#">Services</a>
-<a class="text-[#9a4c73] dark:text-[#f3e7ed] hover:text-primary dark:hover:text-primary text-base font-normal leading-normal min-w-40" href="#">Gallery</a>
-<a class="text-[#9a4c73] dark:text-[#f3e7ed] hover:text-primary dark:hover:text-primary text-base font-normal leading-normal min-w-40" href="#">Testimonials</a>
-<a class="text-[#9a4c73] dark:text-[#f3e7ed] hover:text-primary dark:hover:text-primary text-base font-normal leading-normal min-w-40" href="#">Contact</a>
+<a class="text-text-dark-secondary hover:text-primary text-base font-body min-w-40" href="#">Services</a>
+<a class="text-text-dark-secondary hover:text-primary text-base font-body min-w-40" href="#">Gallery</a>
+<a class="text-text-dark-secondary hover:text-primary text-base font-body min-w-40" href="#">Testimonials</a>
+<a class="text-text-dark-secondary hover:text-primary text-base font-body min-w-40" href="#">Contact</a>
 </div>
-<div class="flex flex-wrap justify-center gap-4">
+<div class="flex flex-wrap justify-center gap-6">
 <a href="#">
-<span class="material-symbols-outlined text-[#9a4c73] dark:text-[#f3e7ed] hover:text-primary dark:hover:text-primary">social_leaderboard</span>
+<svg class="w-6 h-6 text-text-dark-secondary hover:text-primary transition-colors" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.46 6c-.77.35-1.6.58-2.46.67.88-.53 1.56-1.37 1.88-2.38-.83.49-1.74.85-2.7 1.03C18.4 4.6 17.28 4 16.05 4c-2.38 0-4.3 1.92-4.3 4.3 0 .34.04.67.11.98C8.28 9.09 5.16 7.38 3.06 4.79c-.35.6-.55 1.3-.55 2.05 0 1.49.76 2.81 1.91 3.58-.7-.02-1.37-.21-1.95-.54v.05c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.94.07c.55 1.7 2.13 2.94 4.02 2.97-1.47 1.15-3.32 1.83-5.33 1.83-.35 0-.69-.02-1.03-.06C2.64 20.4 4.9 21 7.29 21c7.55 0 11.68-6.25 11.68-11.68l-.01-.53c.8-.58 1.49-1.3 2.04-2.13z"></path>
+</svg>
 </a>
 <a href="#">
-<span class="material-symbols-outlined text-[#9a4c73] dark:text-[#f3e7ed] hover:text-primary dark:hover:text-primary">photo_camera</span>
+<svg class="w-6 h-6 text-text-dark-secondary hover:text-primary transition-colors" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.253.057 2.094.28 2.824.564.743.29 1.344.693 1.944 1.293s.997 1.2 1.293 1.943c.284.73.507 1.57.564 2.824.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.057 1.253-.28 2.094-.564 2.824-.29.743-.693 1.344-1.293 1.944s-1.2.997-1.943 1.293c-.73.284-1.57.507-2.824.564-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.253-.057-2.094-.28-2.824-.564-.743-.29-1.344-.693-1.944-1.293s-.997-1.2-1.293-1.943c-.284-.73-.507-1.57-.564-2.824C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.057-1.253.28-2.094.564-2.824.29-.743.693-1.344 1.293-1.944s1.2-.997 1.943-1.293c.73-.284 1.57-.507 2.824-.564C8.416 2.175 8.796 2.163 12 2.163zm0 1.8c-3.156 0-3.486.01-4.708.067-1.17.053-1.847.26-2.348.455-.6.23-1.01.53-1.432.952-.42.42-.722.832-.952 1.432-.196.5-.402 1.178-.455 2.348C2.01 8.514 2 8.844 2 12s.01 3.486.067 4.708c.053 1.17.26 1.847.455 2.348.23.6.53 1.01.952 1.432.42.42.832.722 1.432.952.5.196 1.178.402 2.348.455 1.222.056 1.552.067 4.708.067s3.486-.01 4.708-.067c1.17-.053 1.847-.26 2.348-.455.6-.23 1.01-.53 1.432-.952.42-.42.722-.832.952-1.432.196-.5.402-1.178.455-2.348.056-1.222.067-1.552.067-4.708s-.01-3.486-.067-4.708c-.053-1.17-.26-1.847-.455-2.348-.23-.6-.53-1.01-.952-1.432-.42-.42-.832-.722-1.432-.952-.5-.196-1.178-.402-2.348-.455C15.486 3.97 15.156 3.963 12 3.963zM12 7.844a4.156 4.156 0 1 0 0 8.312 4.156 4.156 0 0 0 0-8.312zm0 6.512a2.356 2.356 0 1 1 0-4.712 2.356 2.356 0 0 1 0 4.712zM17.65 6.35c-.69 0-1.25.56-1.25 1.25s.56 1.25 1.25 1.25 1.25-.56 1.25-1.25-.56-1.25-1.25-1.25z"></path>
+</svg>
 </a>
 <a href="#">
-<span class="material-symbols-outlined text-[#9a4c73] dark:text-[#f3e7ed] hover:text-primary dark:hover:text-primary">interests</span>
+<svg class="w-6 h-6 text-text-dark-secondary hover:text-primary transition-colors" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.79 0 3.48-.46 4.95-1.28l-1.01-1.74c-1.19.53-2.51.82-3.94.82-4.41 0-8-3.59-8-8s3.59-8 8-8c2.97 0 5.56 1.64 6.94 4H12v2h10V2h-2v2.72C18.39 3.01 15.39 2 12 2z"></path>
+</svg>
 </a>
 </div>
-<p class="text-[#9a4c73] dark:text-[#f3e7ed] text-base font-normal leading-normal">© 2023 Blissful Beginnings. All rights reserved.</p>
+<p class="text-text-dark-secondary text-base font-body leading-relaxed">© 2023 Éclat Events. All rights reserved.</p>
 </footer>
 </main>
 </div>
+
 </body></html>
