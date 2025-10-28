@@ -1,209 +1,193 @@
 <!DOCTYPE html>
+
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Wedding Planner</title>
+<title>Your Royal Rajasthani Wedding Journey</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&amp;family=Playfair+Display:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Playfair+Display:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
 <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
+      .font-serif-display {
+        font-family: 'Playfair Display', serif;
+      }
     </style>
 <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#D4AF37",
-                        "background-light": "#fcf8fa",
-                        "background-dark": "#121212",
-                        "surface-dark": "#1E1E1E",
-                        "text-dark-primary": "#F5F5F5",
-                        "text-dark-secondary": "#A0A0A0"
-                    },
-                    fontFamily: {
-                        "display": ["Playfair Display", "serif"],
-                        "body": ["Cormorant Garamond", "serif"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.5rem",
-                        "lg": "1rem",
-                        "xl": "1.5rem",
-                        "full": "9999px"
-                    },
-                },
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#D4AF37",
+              "background-light": "#f8f7f6",
+              "background-dark": "#1A1A1A",
+              "surface-dark": "#2a2a2a",
+              "text-light": "#1A1A1A",
+              "text-dark": "#F5F5F5",
+              "text-muted-dark": "#a3a3a3",
             },
-        }
+            fontFamily: {
+              "display": ["Manrope", "sans-serif"],
+              "serif-display": ["Playfair Display", "serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
     </script>
-<style>
-        body {
-            min-height: max(884px, 100dvh);
-        }
-    </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-background-dark font-body text-text-dark-primary">
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-light dark:text-text-dark">
 <div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
-<header class="sticky top-0 z-50 bg-background-dark/80 backdrop-blur-sm">
-<div class="container mx-auto px-4">
-<div class="flex justify-between items-center py-4">
-<a class="text-2xl font-bold font-display text-text-dark-primary" href="#">Éclat Events</a>
-<nav class="hidden md:flex items-center space-x-8">
-<a class="text-text-dark-secondary hover:text-primary" href="#">Services</a>
-<a class="text-text-dark-secondary hover:text-primary" href="#">Gallery</a>
-<a class="text-text-dark-secondary hover:text-primary" href="#">Testimonials</a>
-<a class="text-text-dark-secondary hover:text-primary" href="#">Contact</a>
-</nav>
-<div class="flex items-center space-x-4">
-<span class="hidden sm:inline text-sm font-semibold text-text-dark-primary">Call Us: (555) 123-4567</span>
-<button class="md:hidden flex items-center justify-center text-text-dark-primary">
-<span class="material-symbols-outlined">menu</span>
-</button>
-</div>
-</div>
-</div>
-</header>
-<main>
+<div class="layout-container flex h-full grow flex-col">
+<div class="px-4 sm:px-8 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+<!-- HeroSection -->
 <div class="@container">
 <div class="@[480px]:p-4">
-<div class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-xl items-center justify-center p-4" data-alt="A beautifully decorated outdoor wedding venue with flowers and elegant seating." style='background-image: linear-gradient(rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.8) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDHt5ngr-WsuwjPFAunvnHekem8wG30tc3N5yiCl8OF3tbucPL-0_HwguGSFptFWh3Acnv9otDyCHSRADMR9y8cnr8zv9oM-gfhak9rHgZv8gpv7gcel_ThuF8tqnpf4Q1ftfLJ1QnCFkundjsR57_2VBiCYsgtFMKHCWlz0YqHt2whjVorZ_IPTIoPABSO3d7b6LzJ0V0PV6Kh_dswB5qRg6KpEKd3ahc3mmGoPp4ez992YouJRUHfQVyaO2BmW63ZmogSJ7XhKYWe");'>
+<div class="flex min-h-[60vh] md:min-h-[80vh] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-xl items-center justify-center p-4" data-alt="A grand Rajasthani wedding scene at dusk, with camels and Khejri trees under a starlit sky" style='background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuBqEi_Vz9pV0eTrYKk6BYkQfFMrLmdsG790W9PiuBcXZy1lMHr5clLB6leGif3Z26xTd89qbkI6DOrjna5n11fYA0D94nVzACsqdYhiw3m2imF7ckSugpBZr0DHE8vzaW0bUVUU2BKCIR8eidtFshVO4nWhPbAMrAwhK1N7CTAGQ5-FkBLzWPKGmjeIvR4gzUMqv-2Qtt1eKknjTlJa3LCrJqZaz5DKoxPfqLtd-qu1bP3AmzTVBXEwovxH6z6l5hWPAQlz180YEQE");'>
+<div class="flex flex-col gap-2 text-center">
+<h1 class="text-white text-4xl font-serif-display leading-tight tracking-tight @[480px]:text-6xl @[480px]:leading-tight">
+                                        Your Royal Rajasthani Wedding Journey
+                                    </h1>
+<h2 class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal max-w-lg mx-auto">
+                                        Crafting timeless legacies and unforgettable moments under the desert stars.
+                                    </h2>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-primary text-background-dark text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] hover:brightness-110 transition-all duration-300">
+<span class="truncate">Begin Your Legacy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- SectionHeader -->
+<h2 class="text-text-light dark:text-text-dark text-3xl font-serif-display px-4 pb-3 pt-16 text-center">Our Signature Services</h2>
+<!-- ImageGrid -->
+<div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 p-4">
+<div class="bg-cover bg-center flex flex-col gap-3 rounded-xl justify-end p-4 aspect-[3/4]" data-alt="A luxurious palace courtyard set up for a wedding" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDz2YBuwCvn-bJBv0pJACVnmGGq6-OB06lwgZS3zFU43Suk78q0c98Fq7CQ8-KC_9gnoiHfPRG1lCf-lqx31zBIP5-J046DVhzxssUyHhj4vawANDFHqR0GOySAxrPUuYz3QlCUfKJUuRI53goMxFUtYYndGVFu5mqqKKOOPAlXDBkeMRfl7hTVkGSYmVcvXwWYLHumEgk-LmTWgTNh9TA3t6l7BLAc9dhbG7OYnecFmbNpBfWqLUjnQ83niDKHlWS67Onec2kNZ6w");'>
+<p class="text-white text-lg font-bold leading-tight">Venue Curation</p>
+</div>
+<div class="bg-cover bg-center flex flex-col gap-3 rounded-xl justify-end p-4 aspect-[3/4]" data-alt="Elaborate floral and fabric decorations at a wedding venue" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCItqW5DB6yLTFadihAw0wUCRZTLH9IaCJJj-mqzzD7ulvTlDCTAbbFuAIMYERzyfzGVok3Of0-qK-Ex1JLxOgt642kwbfmBvKOivIrayWTCOVRRsEAxqI0yLkRSdM4LDng9VCjzAuShmyZNOnKLn3ytK8ALzMquEaQvow-hHHJxV08TNYmZn2l4Pk3EX9WZ3IT3KgTP8IUBlFHHX3RBGs64HVHZMBlCJERIl4VxJazLUgmsjVEaWjiP7RBSqoUVVPQGxdchdcEQDE");'>
+<p class="text-white text-lg font-bold leading-tight">Decor &amp; Design</p>
+</div>
+<div class="bg-cover bg-center flex flex-col gap-3 rounded-xl justify-end p-4 aspect-[3/4]" data-alt="Wedding guests enjoying a celebration" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDINdtYrL-rh-oJ2Xe-_F_vb5rgCwxLGctkz75hsruZiJsLfuUPdbfsTEnrU0D45mKlTFVhGXmIW_4VJJwxEDPBSifg4gnBs5a_5Z7ss482C2RW2Qg6wsJOVIX1kWUcQfaPUAo7BeaaBzVS48KcMecj5qeLfvmuYwbws_pKFDuYv4epx54x36StJ7mh--4tiVzWxU8dU35IcYWTNOd3bLOin2iCiMHihlN4gyBDFHZpv4KsGAiCS2L7kA0ljLk0Y_hf3r9_ytM8uuk");'>
+<p class="text-white text-lg font-bold leading-tight">Guest Management</p>
+</div>
+<div class="bg-cover bg-center flex flex-col gap-3 rounded-xl justify-end p-4 aspect-[3/4]" data-alt="A gourmet spread of Indian cuisine" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDntk4k7V0-WuMu1Lq8eH7WOUHn9IygK9bhuTQBoNlrFmPyudkCaRJ2DmX0ROSeLNl0yesUlmU0pdqSaPzfJZvGpKN00FOMlzigiuQSIU9HpRS7R9alWeUt--HWnLkhMP3Tlb-sesuig4Be7znGgSEWm1ghCVIVPiURzrepEbIlUXn-Pjo3ZGzHSW3mwE1YANtOo_asEZ6I2geGbm6KVCto_FRlFMWvqW-EIPIJZig0yr0Ml_vMsazc1r_96z9y99XbCPbhBJY8JLw");'>
+<p class="text-white text-lg font-bold leading-tight">Culinary Experiences</p>
+</div>
+</div>
+<!-- FeatureSection -->
+<div class="flex flex-col gap-10 px-4 py-16 @container">
 <div class="flex flex-col gap-4 text-center">
-<h1 class="text-white text-5xl font-display font-bold leading-tight tracking-wide @[480px]:text-6xl">
-                                Curating Unforgettable Moments
+<h1 class="text-text-light dark:text-text-dark text-3xl font-serif-display tracking-tight @[480px]:text-4xl @[480px]:leading-tight max-w-[720px] mx-auto">
+                                The Essence of Our Craft
                             </h1>
-<h2 class="text-text-dark-secondary text-lg font-body leading-relaxed @[480px]:text-xl">
-                                Bespoke wedding planning for the discerning couple.
+<p class="text-text-light/80 dark:text-text-muted-dark text-base font-normal leading-normal max-w-[720px] mx-auto">
+                                We blend meticulous planning with authentic cultural experiences to create a wedding that is uniquely yours.
+                            </p>
+</div>
+<div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 p-0">
+<div class="flex flex-1 gap-4 rounded-xl border border-white/10 bg-background-light dark:bg-surface-dark p-6 flex-col text-center items-center">
+<span class="material-symbols-outlined text-primary" style="font-size: 36px;">fort</span>
+<div class="flex flex-col gap-1">
+<h2 class="text-text-light dark:text-text-dark text-lg font-bold leading-tight">Unmatched Authenticity</h2>
+<p class="text-text-light/80 dark:text-text-muted-dark text-sm font-normal leading-normal">From majestic forts to serene desert camps, experience the true spirit of Rajasthan.</p>
+</div>
+</div>
+<div class="flex flex-1 gap-4 rounded-xl border border-white/10 bg-background-light dark:bg-surface-dark p-6 flex-col text-center items-center">
+<span class="material-symbols-outlined text-primary" style="font-size: 36px;">spa</span>
+<div class="flex flex-col gap-1">
+<h2 class="text-text-light dark:text-text-dark text-lg font-bold leading-tight">Meticulous Planning</h2>
+<p class="text-text-light/80 dark:text-text-muted-dark text-sm font-normal leading-normal">Every detail is flawlessly executed, ensuring a seamless and stress-free celebration.</p>
+</div>
+</div>
+<div class="flex flex-1 gap-4 rounded-xl border border-white/10 bg-background-light dark:bg-surface-dark p-6 flex-col text-center items-center">
+<span class="material-symbols-outlined text-primary" style="font-size: 36px;">handshake</span>
+<div class="flex flex-col gap-1">
+<h2 class="text-text-light dark:text-text-dark text-lg font-bold leading-tight">Exclusive Partnerships</h2>
+<p class="text-text-light/80 dark:text-text-muted-dark text-sm font-normal leading-normal">Access to the finest vendors and most coveted venues in the region.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- SectionHeader -->
+<h2 class="text-text-light dark:text-text-dark text-3xl font-serif-display px-4 pb-3 pt-5 text-center">Moments We've Crafted</h2>
+<!-- Gallery Snippet -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
+<img alt="Bride and groom during a traditional Indian wedding ceremony" class="rounded-xl aspect-square object-cover w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGavixGGWzGiNWhPkD9FzSH0cODehb8qzXXcZvVUpbVoMPxg9xj4IPW9Gbmb-EToRBdxexkB327xjKCY5GUIIHjGbQ8is2rqEMbHohNlSy3uskBZwTgx0Qbda9KGK_lm_dEY6gac7ozwzFT6Ze4wySN2TioBWcx1jSdIBEflLzfDCgHGWDV5VNY55yxEAZSDPFJrrQO6YU7FpvUGmKAsAfBdPoH1GOmCiBjazYwYhyGLgQlg4MPAPjUy8XcIwCjj5E1r4f3MarlcQ"/>
+<img alt="A beautifully decorated mandap for a wedding" class="rounded-xl aspect-square object-cover w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3Qf3uWf9vKFD-JzT97cVKCd84V2w4tKJrMbJNzYDyHGrYTv-J4d03bcrKnVO4BSL0nZaF6v9RWbI6bKONQpsdJQI7J706_l9Lu-sttRJZDb7Ed_RxGgDYCHqTtr_Pr1XfKiEors4hLixhNWqTg9Yw67CiHjOWL4l03DDVXbUvdLc39gQeqKqL_3bznnleH6RbHza08sHRgCktJRlQLi-RYuCCQmQmAXyd2xREzlUl6RdVmukARkjSX_3h9-3Mo2C2OIoBFCnGD3s"/>
+<img alt="Close-up of a bride's henna-adorned hands" class="rounded-xl aspect-square object-cover w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlv1ju5a1GzpgyZKARV6GOh2bP1OMkA_c9nDG4m2qpHg4rFlrAIxbuQ9Zoj6Bi_w2Tctp4XkQyA1dCKBQDvigK65Tc_ir4OYydHtO1EQdKCGqyKZhmBcmtCWNs0fMsnAUX0Ud1yeXsx8o2U5GZLqhQrtL2Jom07lD1Fd1Cd05EIfaBPO1W17f7BUMtBWP_GjwA2RkWIqSnBRStWQskUcbRNV4iTt8LuyXftVsjSiYPe4SKvcoH7ujmYi5OIlcoOt1_4-fZOaq_rP0"/>
+<img alt="A royal wedding procession with elephants in Rajasthan" class="rounded-xl aspect-square object-cover w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9prZ55IBVpvSzTMZtFwAGemIQBp-zhxBI_0FrwaKDkSad4DeXh-FPH0nwieQ3Bc7oFpMQCTDErlaX9d9bWCZ6D2tUeACTHSfnp2G_B216qzhhcLJSD8_BdTLE9_LBdVwbR1uKqngQWO-yRS8cNoywFl3BDiUq1760U08Nc9xq-zRSkFH_oPtQDGbsJBBJEhcVMp9HQ3rZ3rrflt_Zo4lk_K0fc1ltvtyDke4iUNW3l-nnPgWYWwKjAiMENEJTErubJeLIEMbChoc"/>
+</div>
+<!-- Testimonials Section -->
+<div class="flex flex-col gap-10 px-4 py-16 @container">
+<div class="flex flex-col gap-4 text-center">
+<h2 class="text-text-light dark:text-text-dark text-3xl font-serif-display tracking-tight @[480px]:text-4xl @[480px]:leading-tight max-w-[720px] mx-auto">
+                                Words From Our Esteemed Clients
                             </h2>
 </div>
-<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-6 @[480px]:h-14 @[480px]:px-8 bg-primary text-background-dark text-base font-bold leading-normal tracking-wider hover:bg-opacity-90 transition-all">
-<span class="truncate">Book a Consultation</span>
-</button>
-</div>
-</div>
-</div>
-<div class="flex flex-col gap-12 px-4 py-16 @container bg-background-dark">
-<div class="flex flex-col gap-4 text-center items-center">
-<h1 class="text-text-dark-primary tracking-wide text-4xl font-display font-bold leading-tight @[480px]:text-5xl max-w-[720px]">
-                        Our Signature Services
-                    </h1>
-<p class="text-text-dark-secondary text-lg font-body leading-relaxed max-w-[720px]">
-                        With meticulous attention to detail, we orchestrate every facet of your celebration, ensuring a seamless and sublime experience.
-                    </p>
-</div>
-<div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-8 p-0">
-<div class="flex flex-1 gap-4 rounded-xl border border-primary/20 bg-surface-dark p-6 flex-col items-center text-center hover:border-primary/40 transition-colors">
-<span class="material-symbols-outlined text-primary text-5xl">auto_awesome</span>
-<div class="flex flex-col gap-2">
-<h2 class="text-text-dark-primary text-xl font-bold font-display">Bespoke Wedding Design</h2>
-<p class="text-text-dark-secondary text-base font-body leading-relaxed">Crafting a unique narrative that mirrors your love story, from concept to breathtaking reality.</p>
-</div>
-</div>
-<div class="flex flex-1 gap-4 rounded-xl border border-primary/20 bg-surface-dark p-6 flex-col items-center text-center hover:border-primary/40 transition-colors">
-<span class="material-symbols-outlined text-primary text-5xl">diamond</span>
-<div class="flex flex-col gap-2">
-<h2 class="text-text-dark-primary text-xl font-bold font-display">Elite Vendor Curation</h2>
-<p class="text-text-dark-secondary text-base font-body leading-relaxed">Access to our exclusive network of world-class vendors for an unparalleled quality of service.</p>
-</div>
-</div>
-<div class="flex flex-1 gap-4 rounded-xl border border-primary/20 bg-surface-dark p-6 flex-col items-center text-center hover:border-primary/40 transition-colors">
-<span class="material-symbols-outlined text-primary text-5xl">verified</span>
-<div class="flex flex-col gap-2">
-<h2 class="text-text-dark-primary text-xl font-bold font-display">Flawless Execution</h2>
-<p class="text-text-dark-secondary text-base font-body leading-relaxed">Impeccable on-the-day coordination, allowing you to immerse fully in your joyous occasion.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="py-16 bg-surface-dark">
-<div class="flex flex-col gap-4 text-center items-center px-4 mb-8">
-<h1 class="text-text-dark-primary tracking-wide text-4xl font-display font-bold leading-tight @[480px]:text-5xl max-w-[720px]">
-                        Love Stories We've Penned
-                    </h1>
-</div>
-<div class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
-<div class="flex items-stretch p-4 gap-8">
-<div class="flex h-full flex-1 flex-col gap-6 rounded-xl min-w-80 bg-background-dark border border-primary/20 p-6">
-<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex flex-col" data-alt="A happy couple on their wedding day, smiling at the camera." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB_rDy7H_GNOnxhPDRwUgztgmC6w5wnplIahJQL6qpQooKpA1WMOBn8AHrGhjfXedwVpYA-vmrprmb7DqyedG6gK1XMUXp6X7ATCSCrogCUl9X2gux9_GJU1I7xRuatbkqE3k1pimYYICMtuTY_Wr5ffU0tieTQnBPb4jOPXIkkbDVSQzTqAN6m4EFRUbpHKx-nvVPL1fpwZCsd-0IMGetFm_LT7jn0ch7GKSv0ngsltYCL5KEYHM0b83DD6WkUNIYzqxc_zyApMgJS");'></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex flex-col gap-4 bg-background-light dark:bg-surface-dark p-6 rounded-xl border border-white/10">
+<p class="text-text-light/80 dark:text-text-muted-dark italic">"An absolutely magical experience. They turned our dream Rajasthani wedding into a reality, handling every detail with perfection. We couldn't have asked for a more dedicated and creative team."</p>
+<div class="flex items-center gap-3">
+<img alt="Profile picture of a client" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAUwr-vt-g1qutKJNb597S8Og2cA2Q6-Gqo10gFmgEn03LLipUGck_HsdPXjm8Q_vvM_qxFhBuhmZNatdnCxJ8ZIndaZrQupT7NbUB1gWosFI56NH8ZzGBcJz1pSPbgO394vVR-feCQVY7xMZI-kV54Mws4lGlzBYW3BiVy93NoVOiNtYKo5T0DZFE81w0Gnkdcr0mCiqcqKINKUBndNzzBY4EfOrTRmhBBjRZciuhBJgEpuenLBBqGLpsTosgqYO82X0JCVjg4IQ"/>
 <div>
-<p class="text-text-dark-primary text-lg font-body leading-relaxed italic">"An absolute masterpiece. Our day was a symphony of elegance and joy, flawlessly conducted from beginning to end."</p>
-<p class="text-text-dark-secondary text-base font-body mt-4">- Sarah &amp; Tom</p>
+<p class="font-bold text-text-light dark:text-text-dark">Priya &amp; Rohan Sharma</p>
+<p class="text-sm text-text-light/80 dark:text-text-muted-dark">Jaipur Wedding</p>
 </div>
 </div>
-<div class="flex h-full flex-1 flex-col gap-6 rounded-xl min-w-80 bg-background-dark border border-primary/20 p-6">
-<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex flex-col" data-alt="A bride and groom laughing together during their wedding reception." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBulzGNSREyXXlVAc5ANoPwb508QCShcXW3ICeWAvH-jl9NtmeYEsbe6CpXM9oAjJdFssBuQgBOWXgS4eEeMsQJt8WhCAYpfif14SdHkCRwfD0Mcr-YrJB2_LFW1QmCsPXQB4nb6an5AQp8tS3IIDLLSXyeiHts6-3m-ZXr6EgNg48gKF16ydmJuSHan5GpfRxwY6a8754cPBpH-_sSmAPfPQyoT4uixH_5NGEwkT2HRu_OE4Nf5Rax6K8RF4pa4BKOoHH_69SBaM8Q");'></div>
+</div>
+<div class="flex flex-col gap-4 bg-background-light dark:bg-surface-dark p-6 rounded-xl border border-white/10">
+<p class="text-text-light/80 dark:text-text-muted-dark italic">"The level of professionalism and personal touch was unparalleled. They curated the most exclusive venues and vendors, creating a truly royal and unforgettable celebration for our family."</p>
+<div class="flex items-center gap-3">
+<img alt="Profile picture of a client" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhtiBQkiOrG_ex3REN2XCNzMFitgCDWTUAF91fB7er-kWjpqFvyo8iy5G7oAJWP8xgfk3qEc8qixqSE39LPn0EVHfZtUgqQ3ikPFIMkS5INP6w9rPdrLlqGCwvHakNB0drFkjBEZtZBPegGFhn4bSjgWtyKOKZVCJTvBhPVTL9MSFSpGHrahB-JrPFwVZR0ye44Nw_wd4daWxHyf2iaM5a2nuhdWZQlKtEjwZeSLDO9Bld8YQpQ1NTFGap6g2ccOvJvGyWlzrmNFQ"/>
 <div>
-<p class="text-text-dark-primary text-lg font-body leading-relaxed italic">"Their vision transformed our dreams into a reality that was more beautiful than we could have ever imagined."</p>
-<p class="text-text-dark-secondary text-base font-body mt-4">- Emily &amp; James</p>
+<p class="font-bold text-text-light dark:text-text-dark">Aarav Singh</p>
+<p class="text-sm text-text-light/80 dark:text-text-muted-dark">Udaipur Wedding</p>
 </div>
 </div>
-<div class="flex h-full flex-1 flex-col gap-6 rounded-xl min-w-80 bg-background-dark border border-primary/20 p-6">
-<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex flex-col" data-alt="A couple sharing a romantic moment under a floral archway." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAfy4Cg1U--CvJckn75NBWNoGeBPyjM8LPm5ueRZgEQvWfTtvieYeiKNtLqC8UGK514qhjcMNg3cpmPegoGqvcEQWBxioZjGRugvODm7iEbnWkNBelyEGRNzmzIlmpPm47x4rpJwkg40F3KlRuOTpGGdzDqJkCCE1viSOtyQZ2phgJq1klMtykDAED4fbDv0-SDMFsrOZWJqYyFriNMameV8lq0UYoCvzqgtRJoH5vJAeYz_uhlMb7dGcrHgrgc4eHBfBsUoHNERWMp");'></div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="w-full mt-16 border-t border-white/10 py-8 px-4">
+<div class="max-w-[960px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
 <div>
-<p class="text-text-dark-primary text-lg font-body leading-relaxed italic">"Every detail was handled with such care and sophistication. We were guests at our own perfect wedding."</p>
-<p class="text-text-dark-secondary text-base font-body mt-4">- Jessica &amp; Chris</p>
+<h3 class="font-bold text-lg font-serif-display text-primary">Royal Rajasthani Weddings</h3>
+<p class="text-sm text-text-light/80 dark:text-text-muted-dark mt-2">Crafting legendary celebrations since 2010.</p>
 </div>
+<div>
+<h4 class="font-bold text-text-light dark:text-text-dark">Quick Links</h4>
+<ul class="mt-2 space-y-1 text-sm text-text-light/80 dark:text-text-muted-dark">
+<li><a class="hover:text-primary" href="#">Services</a></li>
+<li><a class="hover:text-primary" href="#">Gallery</a></li>
+<li><a class="hover:text-primary" href="#">About Us</a></li>
+<li><a class="hover:text-primary" href="#">Contact</a></li>
+</ul>
 </div>
-</div>
-</div>
-</div>
-<div class="@container">
-<div class="flex flex-col justify-end gap-8 px-4 py-16 @[480px]:gap-10 @[480px]:px-10 @[480px]:py-24 bg-primary/10 rounded-xl m-4">
-<div class="flex flex-col gap-4 text-center items-center">
-<h1 class="text-text-dark-primary tracking-wide text-4xl font-display font-bold leading-tight @[480px]:text-5xl max-w-[720px]">
-                            Begin Your Legacy
-                        </h1>
-<p class="text-text-dark-secondary text-lg font-body leading-relaxed max-w-[720px]">Let us embark on the journey of creating your perfect day. Contact us for a private consultation.</p>
-</div>
-<div class="flex flex-1 justify-center">
-<label class="flex flex-col min-w-40 h-14 max-w-[480px] flex-1 @[480px]:h-16">
-<div class="flex w-full flex-1 items-stretch rounded-full h-full">
-<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-full text-text-dark-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-surface-dark h-full placeholder:text-text-dark-secondary px-6 pr-2 text-base font-normal leading-normal @[480px]:text-lg" placeholder="Enter your email" value=""/>
-<div class="flex items-center justify-center rounded-r-full bg-surface-dark pr-2">
-<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 @[480px]:h-12 @[480px]:px-8 bg-primary text-background-dark text-base font-bold leading-normal tracking-wider hover:bg-opacity-90 transition-all">
-<span class="truncate">Request Invite</span>
-</button>
-</div>
-</div>
-</label>
-</div>
-</div>
-</div>
-<footer class="flex flex-col gap-8 px-5 py-12 text-center @container bg-background-dark">
-<div class="flex flex-wrap items-center justify-center gap-6 @[480px]:flex-row @[480px]:justify-around">
-<a class="text-text-dark-secondary hover:text-primary text-base font-body min-w-40" href="#">Services</a>
-<a class="text-text-dark-secondary hover:text-primary text-base font-body min-w-40" href="#">Gallery</a>
-<a class="text-text-dark-secondary hover:text-primary text-base font-body min-w-40" href="#">Testimonials</a>
-<a class="text-text-dark-secondary hover:text-primary text-base font-body min-w-40" href="#">Contact</a>
-</div>
-<div class="flex flex-wrap justify-center gap-6">
-<a href="#">
-<svg class="w-6 h-6 text-text-dark-secondary hover:text-primary transition-colors" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<path d="M22.46 6c-.77.35-1.6.58-2.46.67.88-.53 1.56-1.37 1.88-2.38-.83.49-1.74.85-2.7 1.03C18.4 4.6 17.28 4 16.05 4c-2.38 0-4.3 1.92-4.3 4.3 0 .34.04.67.11.98C8.28 9.09 5.16 7.38 3.06 4.79c-.35.6-.55 1.3-.55 2.05 0 1.49.76 2.81 1.91 3.58-.7-.02-1.37-.21-1.95-.54v.05c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.94.07c.55 1.7 2.13 2.94 4.02 2.97-1.47 1.15-3.32 1.83-5.33 1.83-.35 0-.69-.02-1.03-.06C2.64 20.4 4.9 21 7.29 21c7.55 0 11.68-6.25 11.68-11.68l-.01-.53c.8-.58 1.49-1.3 2.04-2.13z"></path>
-</svg>
+<div>
+<h4 class="font-bold text-text-light dark:text-text-dark">Connect With Us</h4>
+<div class="flex justify-center md:justify-start gap-4 mt-2">
+<a aria-label="Instagram" class="text-text-light/80 dark:text-text-muted-dark hover:text-primary" href="#">
+<svg class="feather feather-instagram" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><rect height="20" rx="5" ry="5" width="20" x="2" y="2"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
 </a>
-<a href="#">
-<svg class="w-6 h-6 text-text-dark-secondary hover:text-primary transition-colors" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.253.057 2.094.28 2.824.564.743.29 1.344.693 1.944 1.293s.997 1.2 1.293 1.943c.284.73.507 1.57.564 2.824.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.057 1.253-.28 2.094-.564 2.824-.29.743-.693 1.344-1.293 1.944s-1.2.997-1.943 1.293c-.73.284-1.57.507-2.824.564-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.253-.057-2.094-.28-2.824-.564-.743-.29-1.344-.693-1.944-1.293s-.997-1.2-1.293-1.943c-.284-.73-.507-1.57-.564-2.824C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.057-1.253.28-2.094.564-2.824.29-.743.693-1.344 1.293-1.944s1.2-.997 1.943-1.293c.73-.284 1.57-.507 2.824-.564C8.416 2.175 8.796 2.163 12 2.163zm0 1.8c-3.156 0-3.486.01-4.708.067-1.17.053-1.847.26-2.348.455-.6.23-1.01.53-1.432.952-.42.42-.722.832-.952 1.432-.196.5-.402 1.178-.455 2.348C2.01 8.514 2 8.844 2 12s.01 3.486.067 4.708c.053 1.17.26 1.847.455 2.348.23.6.53 1.01.952 1.432.42.42.832.722 1.432.952.5.196 1.178.402 2.348.455 1.222.056 1.552.067 4.708.067s3.486-.01 4.708-.067c1.17-.053 1.847-.26 2.348-.455.6-.23 1.01-.53 1.432-.952.42-.42.722-.832.952-1.432.196-.5.402-1.178.455-2.348.056-1.222.067-1.552.067-4.708s-.01-3.486-.067-4.708c-.053-1.17-.26-1.847-.455-2.348-.23-.6-.53-1.01-.952-1.432-.42-.42-.832-.722-1.432-.952-.5-.196-1.178-.402-2.348-.455C15.486 3.97 15.156 3.963 12 3.963zM12 7.844a4.156 4.156 0 1 0 0 8.312 4.156 4.156 0 0 0 0-8.312zm0 6.512a2.356 2.356 0 1 1 0-4.712 2.356 2.356 0 0 1 0 4.712zM17.65 6.35c-.69 0-1.25.56-1.25 1.25s.56 1.25 1.25 1.25 1.25-.56 1.25-1.25-.56-1.25-1.25-1.25z"></path>
-</svg>
+<a aria-label="Facebook" class="text-text-light/80 dark:text-text-muted-dark hover:text-primary" href="#">
+<svg class="feather feather-facebook" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
 </a>
-<a href="#">
-<svg class="w-6 h-6 text-text-dark-secondary hover:text-primary transition-colors" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.79 0 3.48-.46 4.95-1.28l-1.01-1.74c-1.19.53-2.51.82-3.94.82-4.41 0-8-3.59-8-8s3.59-8 8-8c2.97 0 5.56 1.64 6.94 4H12v2h10V2h-2v2.72C18.39 3.01 15.39 2 12 2z"></path>
-</svg>
+<a aria-label="Pinterest" class="text-text-light/80 dark:text-text-muted-dark hover:text-primary" href="#">
+<svg class="feather feather-pinterest" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.237 2.636 7.855 6.356 9.312-.084-.336-.14-1.12.016-1.628.16- .518.99-4.184.99-4.184s-.248-.496-.248-1.228c0-1.15.67-2.014 1.512-2.014.71 0 1.044.532 1.044 1.176 0 .71-.456 1.772-.684 2.748-.188.784.396 1.428 1.18 1.428 1.416 0 2.5-1.496 2.5-3.664 0-1.928-1.37-3.29-3.05-3.29-2.048 0-3.244 1.528-3.244 3.128 0 .6.228 1.248.512 1.628.072.096.084.18.06.276-.024.108-.084.336-.12.48-.036.144-.192.192-.336.108-1.212-.528-1.968-1.944-1.968-3.264 0-2.556 1.848-4.8 5.28-4.8 2.772 0 4.944 1.98 4.944 4.512 0 2.7-1.704 4.848-4.08 4.848-1.32 0-2.592-.696-3.024-1.512l-.84 3.192c-.36.132-.744.216-1.152.216 2.532-.912 3.84-3.564 3.84-6.408 0-3.216-2.904-5.904-6.6-5.904z"></path></svg>
 </a>
 </div>
-<p class="text-text-dark-secondary text-base font-body leading-relaxed">© 2023 Éclat Events. All rights reserved.</p>
+</div>
+</div>
+<div class="text-center text-xs text-text-light/60 dark:text-text-muted-dark mt-8 pt-8 border-t border-white/10">
+<p>© 2024 Royal Rajasthani Weddings. All Rights Reserved.</p>
+</div>
 </footer>
-</main>
 </div>
-
+</div>
+</div>
+</div>
 </body></html>
