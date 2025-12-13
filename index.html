@@ -3,42 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Generative Particles</title>
+    <title>Clean Morph AI</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
+        
+        /* Full Screen Canvas */
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        /* Video ko hide kar diya hai par background me chalega */
         #video-container {
-            position: absolute; bottom: 20px; right: 20px; z-index: 2;
-            width: 200px; height: 150px; border: 2px solid #00ffcc; border-radius: 12px; overflow: hidden;
-            transform: scaleX(-1); box-shadow: 0 0 20px rgba(0, 255, 204, 0.2); opacity: 0.8;
+            position: absolute; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none;
         }
-        video { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Minimal UI - Sirf bottom me chhota status */
         #ui-layer {
-            position: absolute; top: 20px; left: 20px; z-index: 3;
-            color: #fff; pointer-events: none; text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10;
+            color: rgba(255, 255, 255, 0.7); text-align: center; pointer-events: none;
+            text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem;
         }
-        h1 { font-size: 1.5rem; margin: 0 0 15px 0; letter-spacing: 2px; background: linear-gradient(90deg, #00ffcc, #0088ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .instruction { font-size: 1rem; margin-bottom: 8px; opacity: 0.9; display: flex; align-items: center; gap: 10px; }
-        .key-gesture { font-weight: bold; color: #00ffcc; }
-        .status { margin-top: 20px; font-weight: bold; color: #fff; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 8px; border-left: 4px solid #00ffcc; }
-        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00ffcc; font-size: 1.2rem; z-index: 10; font-weight: bold; }
+        
+        #status-text {
+            font-weight: bold; color: #00ffcc; text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+
+        .loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #555; font-size: 0.8rem; z-index: 20;
+        }
     </style>
 </head>
 <body>
 
-    <div id="loading" class="loading">⚡ Loading AI Vision...</div>
+    <div id="loading" class="loading">Loading AI...</div>
 
     <div id="ui-layer">
-        <h1>Generative Morph AI</h1>
-        <div class="instruction">☝️ <span class="key-gesture">1 Finger:</span> Galaxy Spiral</div>
-        <div class="instruction">✌️ <span class="key-gesture">2 Fingers:</span> Love Heart</div>
-        <div class="instruction">🤟 <span class="key-gesture">3 Fingers:</span> Torus Knot</div>
-        <div class="instruction">🖖 <span class="key-gesture">4 Fingers:</span> Atomic Sphere</div>
-        <div class="instruction">🖐️ <span class="key-gesture">5 Fingers:</span> 🎲 RANDOM MAGIC ART (Try it!)</div>
-        <div class="instruction">---</div>
-        <div class="instruction">🤏 <span class="key-gesture">Pinch:</span> Explosion Effect</div>
-        <div class="instruction">↔️ <span class="key-gesture">Move Hand:</span> Paint Color</div>
-        <div class="status" id="status-text">Waiting for camera...</div>
+        <div id="status-text">Waiting for Camera...</div>
+        <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 5px;">Use 1-5 Fingers</div>
     </div>
 
     <div id="video-container">
@@ -61,28 +61,15 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
-        // --- Configuration ---
-        const PARTICLE_COUNT = 12000; // Increased for better look
-        const PARTICLE_SIZE = 0.12;
-        const LERP_SPEED = 0.06;
-
-        // --- State ---
-        let currentShape = 'sphere';
-        let targetExpansion = 1.0;
-        let targetHue = 0.0;
-        let handDetected = false;
-        let lastFingerCount = 0;
+        // --- Config ---
+        const PARTICLE_COUNT = 15000; // Density badha di
+        const PARTICLE_SIZE = 0.08;   // Size chhota kar diya clean look ke liye
         
-        // Random Shape Generator Parameters
-        let randomParams = { m: 0, n1: 0, n2: 0, n3: 0, a: 1, b: 1 };
-
-        // --- Three.js Setup ---
+        // --- Setup ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.015);
-
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.z = 30;
+        camera.position.z = 25;
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -92,332 +79,176 @@
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5;
+        controls.autoRotateSpeed = 0.8;
 
-        // --- Particle System ---
+        // --- Particles ---
         const geometry = new THREE.BufferGeometry();
-        const currentPositions = new Float32Array(PARTICLE_COUNT * 3);
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
         const targetPositions = new Float32Array(PARTICLE_COUNT * 3);
         const colors = new Float32Array(PARTICLE_COUNT * 3);
-        const randomness = new Float32Array(PARTICLE_COUNT * 3); // For twinkling
 
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            const x = (Math.random() - 0.5) * 50;
-            const y = (Math.random() - 0.5) * 50;
-            const z = (Math.random() - 0.5) * 50;
-            
-            currentPositions[i*3] = x; currentPositions[i*3+1] = y; currentPositions[i*3+2] = z;
-            targetPositions[i*3] = x; targetPositions[i*3+1] = y; targetPositions[i*3+2] = z;
-            
-            randomness[i] = Math.random(); 
+        for(let i=0; i<PARTICLE_COUNT; i++) {
+            positions[i*3] = (Math.random()-0.5)*50;
+            positions[i*3+1] = (Math.random()-0.5)*50;
+            positions[i*3+2] = (Math.random()-0.5)*50;
+            targetPositions[i] = positions[i];
         }
-
-        geometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
+        
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
         const material = new THREE.PointsMaterial({
-            size: PARTICLE_SIZE,
-            vertexColors: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            transparent: true,
-            opacity: 0.9,
-            map: createGlowTexture()
+            size: PARTICLE_SIZE, vertexColors: true, blending: THREE.AdditiveBlending,
+            depthWrite: false, transparent: true, opacity: 0.8
         });
-
         const particles = new THREE.Points(geometry, material);
         scene.add(particles);
 
-        // --- MATH MAGIC: Shape Generators ---
+        // --- Shape Logic & Math ---
+        let randomParams = { m: 5, n1: 1, n2: 1, n3: 1 };
         
-        // Helper for Random Art
-        function generateRandomParams() {
-            // Generates random Superformula parameters
-            randomParams = {
-                m: Math.floor(Math.random() * 20), // Lobes
-                n1: 0.5 + Math.random() * 10,
-                n2: 0.5 + Math.random() * 10,
-                n3: 0.5 + Math.random() * 10,
-                a: 1,
-                b: 1
-            };
-            // Randomize rotation speed and direction
-            controls.autoRotateSpeed = (Math.random() - 0.5) * 4;
-        }
-
-        // The Superformula Equation (Nature's Math)
-        function superformula(phi, m, n1, n2, n3, a, b) {
-            return Math.pow(
-                Math.pow(Math.abs(Math.cos(m * phi / 4) / a), n2) + 
-                Math.pow(Math.abs(Math.sin(m * phi / 4) / b), n3), 
-                -1 / n1
-            );
+        function superformula(phi, m, n1, n2, n3) {
+            return Math.pow(Math.pow(Math.abs(Math.cos(m * phi / 4)), n2) + Math.pow(Math.abs(Math.sin(m * phi / 4)), n3), -1 / n1);
         }
 
         const Shapes = {
             sphere: (i) => {
                 const phi = Math.acos(-1 + (2 * i) / PARTICLE_COUNT);
                 const theta = Math.sqrt(PARTICLE_COUNT * Math.PI) * phi;
-                const r = 9;
-                return { x: r * Math.cos(theta) * Math.sin(phi), y: r * Math.sin(theta) * Math.sin(phi), z: r * Math.cos(phi) };
+                return { x: 8*Math.cos(theta)*Math.sin(phi), y: 8*Math.sin(theta)*Math.sin(phi), z: 8*Math.cos(phi) };
             },
             galaxy: (i) => {
-                // Logarithmic spiral
-                const angle = i * 0.1;
-                const r = (i / PARTICLE_COUNT) * 15;
-                const armOffset = (i % 3) * (Math.PI * 2 / 3);
-                const randomOffset = (Math.random() - 0.5) * 1.5;
-                return {
-                    x: (r * Math.cos(angle + armOffset)) + randomOffset,
-                    y: (Math.random() - 0.5) * (r * 0.2), // Flat disk
-                    z: (r * Math.sin(angle + armOffset)) + randomOffset
-                };
+                const angle = i * 0.1; const r = (i/PARTICLE_COUNT)*15;
+                return { x: r*Math.cos(angle), y: (Math.random()-0.5)*r*0.2, z: r*Math.sin(angle) };
             },
             heart: (i) => {
-                const t = (i / PARTICLE_COUNT) * Math.PI * 2;
-                // Distribute points across volume for fuller heart
-                const phi = Math.random() * Math.PI * 2;
-                const theta = Math.random() * Math.PI;
-                const x = 16 * Math.pow(Math.sin(phi), 3);
-                const y = 13 * Math.cos(phi) - 5 * Math.cos(2*phi) - 2 * Math.cos(3*phi) - Math.cos(4*phi);
-                const scale = 0.4;
-                // Add depth based on random distribution
-                const z = (Math.random()-0.5) * 5; 
-                return { x: x * scale, y: y * scale, z: z };
+                const phi = Math.random()*Math.PI*2; const theta = Math.random()*Math.PI;
+                const x = 16*Math.pow(Math.sin(phi),3);
+                const y = 13*Math.cos(phi)-5*Math.cos(2*phi)-2*Math.cos(3*phi)-Math.cos(4*phi);
+                return { x: x*0.4, y: y*0.4, z: (Math.random()-0.5)*3 };
             },
-            torusKnot: (i) => {
-                const t = (i / PARTICLE_COUNT) * Math.PI * 20; 
-                const p = 3; // loops
-                const q = 7; // winding
-                const r = 0.5 * (2 + Math.sin(q * t));
-                const scale = 4;
-                return {
-                    x: scale * r * Math.cos(p * t),
-                    y: scale * r * Math.sin(p * t),
-                    z: scale * 0.5 * Math.cos(q * t)
-                };
-            },
-            randomGen: (i) => {
-                // Use the stored randomParams
-                const phi = (i / PARTICLE_COUNT) * Math.PI * 2; // Longitude
-                const theta = (i / PARTICLE_COUNT) * Math.PI * 16; // Latitude strips
-                
-                // Mix sphere logic with superformula radius
-                const r1 = superformula(phi, randomParams.m, randomParams.n1, randomParams.n2, randomParams.n3, randomParams.a, randomParams.b);
-                const r2 = superformula(theta, randomParams.m, randomParams.n1, randomParams.n2, randomParams.n3, randomParams.a, randomParams.b);
-                
-                const r = 8 * r1 * r2; // Scale it up
-                
-                return {
-                    x: r * Math.cos(phi) * Math.sin(theta),
-                    y: r * Math.sin(phi) * Math.sin(theta),
-                    z: r * Math.cos(theta)
-                };
+            random: (i) => {
+                const phi = (i/PARTICLE_COUNT)*Math.PI*2; 
+                const theta = (i/PARTICLE_COUNT)*Math.PI*16;
+                const r = 8 * superformula(phi, randomParams.m, randomParams.n1, randomParams.n2, randomParams.n3) * superformula(theta, randomParams.m, randomParams.n1, randomParams.n2, randomParams.n3);
+                return { x: r*Math.cos(phi)*Math.sin(theta), y: r*Math.sin(phi)*Math.sin(theta), z: r*Math.cos(theta) };
             }
         };
 
-        function updateShapeTargets(shapeName) {
-            const generator = Shapes[shapeName];
-            if(!generator) return;
-            
-            // If random, generate new math params once
-            if(shapeName === 'randomGen') {
-                // Params already generated in gesture logic
-            }
+        let currentShape = 'sphere';
+        let targetExpansion = 1.0;
+        let targetHue = 0.5;
 
+        function updateTargets(shape) {
+            const gen = Shapes[shape];
             for(let i=0; i<PARTICLE_COUNT; i++) {
-                const pos = generator(i);
-                targetPositions[i*3] = pos.x;
-                targetPositions[i*3+1] = pos.y;
-                targetPositions[i*3+2] = pos.z;
+                const p = gen(i);
+                targetPositions[i*3] = p.x; targetPositions[i*3+1] = p.y; targetPositions[i*3+2] = p.z;
             }
         }
+        updateTargets('sphere');
+
+        // --- AI Vision ---
+        let handLandmarker;
+        let lastCount = 0;
         
-        // Initial Shape
-        updateShapeTargets('sphere');
-
-        // --- Helper: Better Glow Texture ---
-        function createGlowTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 64; canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            const grad = ctx.createRadialGradient(32,32,0,32,32,32);
-            grad.addColorStop(0, 'rgba(255,255,255,1)');
-            grad.addColorStop(0.3, 'rgba(255,255,255,0.4)');
-            grad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0,0,64,64);
-            const texture = new THREE.Texture(canvas);
-            texture.needsUpdate = true;
-            return texture;
+        async function startAI() {
+            try {
+                const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`, delegate: "GPU" },
+                    runningMode: "VIDEO", numHands: 1
+                });
+                document.getElementById('loading').style.display = 'none';
+                startCam();
+            } catch(e) {
+                alert("AI Error: " + e);
+            }
         }
 
-        // --- MediaPipe Setup ---
-        let handLandmarker = undefined;
-        let webcam = document.getElementById('webcam');
-        let lastVideoTime = -1;
-
-        async function setupMediaPipe() {
-            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
-            handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                baseOptions: {
-                    modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-                    delegate: "GPU"
-                },
-                runningMode: "VIDEO",
-                numHands: 1
-            });
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('status-text').innerText = "System Ready. Show Hand.";
-            startCamera();
-        }
-
-        function startCamera() {
+        function startCam() {
+            const webcam = document.getElementById('webcam');
             navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
                 webcam.srcObject = stream;
-                webcam.addEventListener('loadeddata', predictWebcam);
+                webcam.addEventListener('loadeddata', predict);
+                document.getElementById('status-text').innerText = "Active. Show Hand.";
+            }).catch(err => {
+                alert("Camera Error! Please run on Localhost (Server), not double click file.");
             });
         }
 
-        async function predictWebcam() {
-            if (lastVideoTime !== webcam.currentTime) {
-                lastVideoTime = webcam.currentTime;
-                const startTimeMs = performance.now();
-                if (handLandmarker) {
-                    const result = await handLandmarker.detectForVideo(webcam, startTimeMs);
-                    processHandData(result);
-                }
-            }
-            window.requestAnimationFrame(predictWebcam);
-        }
-
-        // --- Interaction Logic ---
-        function processHandData(result) {
-            const statusText = document.getElementById('status-text');
-
-            if (result.landmarks && result.landmarks.length > 0) {
-                handDetected = true;
-                const landmarks = result.landmarks[0];
-                
-                // 1. PINCH (Expansion)
-                const thumbTip = landmarks[4];
-                const indexTip = landmarks[8];
-                const distance = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
-                targetExpansion = THREE.MathUtils.mapLinear(distance, 0.03, 0.25, 0.2, 2.5);
-                targetExpansion = THREE.MathUtils.clamp(targetExpansion, 0.2, 3.0);
-
-                // 2. COLOR (X Position)
-                targetHue = landmarks[9].x; // Use Middle finger knuckle for stable tracking
-
-                // 3. FINGER COUNTING
-                const count = countFingers(landmarks);
-                
-                // Trigger logic: Only change if count changes to avoid glitching
-                if (count !== lastFingerCount) {
-                    let newShape = currentShape;
-                    let desc = "";
-
-                    if(count === 1) { newShape = 'galaxy'; desc = "Spiral Galaxy"; }
-                    if(count === 2) { newShape = 'heart'; desc = "Love Heart"; }
-                    if(count === 3) { newShape = 'torusKnot'; desc = "Infinity Knot"; }
-                    if(count === 4) { newShape = 'sphere'; desc = "Atomic Sphere"; }
+        async function predict() {
+            const webcam = document.getElementById('webcam');
+            if(handLandmarker && webcam.currentTime > 0) {
+                const result = await handLandmarker.detectForVideo(webcam, performance.now());
+                if(result.landmarks.length > 0) {
+                    const lm = result.landmarks[0];
                     
-                    // THE MAGIC: 5 Fingers = NEW Random Art
-                    if(count === 5) { 
-                        generateRandomParams(); // Create new Math Params
-                        newShape = 'randomGen'; 
-                        desc = "✨ Generative Magic"; 
-                    }
+                    // 1. Pinch for size
+                    const pinch = Math.hypot(lm[4].x-lm[8].x, lm[4].y-lm[8].y);
+                    targetExpansion = pinch < 0.05 ? 3.0 : 1.0; // Pinch to explode
 
-                    if (newShape !== currentShape || count === 5) {
-                        currentShape = newShape;
-                        updateShapeTargets(currentShape);
-                        
-                        // Visual feedback
-                        statusText.innerHTML = `<span style="color:#00ffcc">${desc}</span> Detected!`;
-                        statusText.style.borderColor = `hsl(${targetHue * 360}, 100%, 50%)`;
+                    // 2. Position for color
+                    targetHue = lm[9].x;
+
+                    // 3. Count Fingers
+                    let count = 0;
+                    if(lm[8].y < lm[6].y) count++; if(lm[12].y < lm[10].y) count++;
+                    if(lm[16].y < lm[14].y) count++; if(lm[20].y < lm[18].y) count++;
+                    if(Math.abs(lm[4].x - lm[17].x) > 0.15) count++; // Thumb rough check
+
+                    if(count !== lastCount) {
+                        if(count === 1) { updateTargets('galaxy'); document.getElementById('status-text').innerText = "Galaxy"; }
+                        if(count === 2) { updateTargets('heart'); document.getElementById('status-text').innerText = "Heart"; }
+                        if(count === 3 || count === 4) { updateTargets('sphere'); document.getElementById('status-text').innerText = "Sphere"; }
+                        if(count === 5) { 
+                            randomParams = { m: Math.random()*10, n1: Math.random()*5, n2: Math.random()*5, n3: Math.random()*5 };
+                            updateTargets('random'); 
+                            document.getElementById('status-text').innerText = "Magic Design"; 
+                        }
+                        lastCount = count;
                     }
-                    lastFingerCount = count;
+                } else {
+                    targetExpansion = THREE.MathUtils.lerp(targetExpansion, 1.0, 0.1);
                 }
-
-            } else {
-                handDetected = false;
-                targetExpansion = THREE.MathUtils.lerp(targetExpansion, 1.0, 0.05);
-                lastFingerCount = 0;
             }
+            requestAnimationFrame(predict);
         }
 
-        function countFingers(landmarks) {
-            let count = 0;
-            if (landmarks[8].y < landmarks[6].y) count++; // Index
-            if (landmarks[12].y < landmarks[10].y) count++; // Middle
-            if (landmarks[16].y < landmarks[14].y) count++; // Ring
-            if (landmarks[20].y < landmarks[18].y) count++; // Pinky
-            // Thumb (based on X distance for L/R agnostic)
-            if (Math.abs(landmarks[4].x - landmarks[17].x) > Math.abs(landmarks[3].x - landmarks[17].x)) count++;
-            return count;
-        }
-
-        // --- Animation Loop ---
-        const colorObj = new THREE.Color();
-        let time = 0;
-
+        // --- Loop ---
+        const color = new THREE.Color();
         function animate() {
-            requestAnimationFrame(animate);
-            time += 0.01;
-
-            const positions = geometry.attributes.position.array;
+            const pos = geometry.attributes.position.array;
             const cols = geometry.attributes.color.array;
-            
-            // Dynamic Color shifting
-            const baseHue = handDetected ? targetHue : (time * 0.05) % 1;
-            
+            color.setHSL(targetHue, 1, 0.5);
+
             for(let i=0; i<PARTICLE_COUNT; i++) {
                 const i3 = i*3;
-
-                // Position Morph
                 const tx = targetPositions[i3] * targetExpansion;
                 const ty = targetPositions[i3+1] * targetExpansion;
                 const tz = targetPositions[i3+2] * targetExpansion;
-
-                positions[i3] += (tx - positions[i3]) * LERP_SPEED;
-                positions[i3+1] += (ty - positions[i3+1]) * LERP_SPEED;
-                positions[i3+2] += (tz - positions[i3+2]) * LERP_SPEED;
-
-                // Alive Motion (Noise)
-                const noise = Math.sin(time + positions[i3] * 0.5) * 0.02;
-                positions[i3] += noise;
-                positions[i3+1] += noise;
-
-                // Color Magic
-                // Create a gradient based on particle density/radius
-                const pDist = Math.sqrt(positions[i3]**2 + positions[i3+1]**2 + positions[i3+2]**2);
-                const hueShift = (pDist * 0.05) + baseHue;
                 
-                colorObj.setHSL(hueShift % 1, 0.8, 0.6 + Math.sin(time * 2 + randomness[i]*10)*0.2); // Twinkle effect
+                pos[i3] += (tx - pos[i3]) * 0.08;
+                pos[i3+1] += (ty - pos[i3+1]) * 0.08;
+                pos[i3+2] += (tz - pos[i3+2]) * 0.08;
 
-                cols[i3] = THREE.MathUtils.lerp(cols[i3], colorObj.r, 0.1);
-                cols[i3+1] = THREE.MathUtils.lerp(cols[i3+1], colorObj.g, 0.1);
-                cols[i3+2] = THREE.MathUtils.lerp(cols[i3+2], colorObj.b, 0.1);
+                cols[i3] = THREE.MathUtils.lerp(cols[i3], color.r, 0.05);
+                cols[i3+1] = THREE.MathUtils.lerp(cols[i3+1], color.g, 0.05);
+                cols[i3+2] = THREE.MathUtils.lerp(cols[i3+2], color.b, 0.05);
             }
-
             geometry.attributes.position.needsUpdate = true;
             geometry.attributes.color.needsUpdate = true;
             
             controls.update();
             renderer.render(scene, camera);
+            requestAnimationFrame(animate);
         }
 
-        // --- Init ---
-        setupMediaPipe();
-        animate();
-
+        startAI();
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+            camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
     </script>
 </body>
 </html>
