@@ -3,71 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Voice & Hand Particle Magic</title>
+    <title>Ultimate Particles</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; }
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
         
+        /* ThreeJS Canvas */
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+        /* Video Preview (Small) */
         #video-container {
-            position: absolute; bottom: 20px; right: 20px; z-index: 2;
-            width: 160px; height: 120px; border: 2px solid #333; border-radius: 10px; overflow: hidden;
-            transform: scaleX(-1); opacity: 0.6;
-            transition: opacity 0.3s;
+            position: absolute; bottom: 10px; right: 10px; z-index: 2;
+            width: 120px; height: 90px; border: 1px solid #444; border-radius: 8px; overflow: hidden;
+            transform: scaleX(-1); opacity: 0.5;
         }
-        #video-container.active { opacity: 0.9; border-color: #00ffcc; }
         video { width: 100%; height: 100%; object-fit: cover; }
 
-        #ui-layer {
-            position: absolute; top: 20px; left: 20px; z-index: 3;
-            color: #00ffcc; pointer-events: none;
-            text-shadow: 0 0 5px rgba(0,0,0,0.8);
-        }
-        h1 { font-size: 1.2rem; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px; }
-        .instruction { font-size: 0.8rem; margin-bottom: 4px; opacity: 0.8; }
-        .status { margin-top: 15px; font-weight: bold; color: #fff; font-size: 0.9rem; }
-        
-        /* Start Button Overlay for Audio Permission */
+        /* Start Button / Overlay */
         #overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100;
+            background: rgba(0,0,0,0.85); z-index: 100;
             display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            text-align: center; color: white;
+            justify-content: center; align-items: center; text-align: center;
         }
-        #start-btn {
-            padding: 15px 40px; font-size: 1.5rem; color: #000; background: #00ffcc;
-            border: none; border-radius: 50px; cursor: pointer; font-weight: bold;
-            margin-top: 20px; box-shadow: 0 0 20px #00ffcc;
+        button {
+            padding: 15px 30px; font-size: 1.2rem; background: #00ffcc; border: none;
+            border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px;
         }
-        .bar-container {
-            display: flex; gap: 2px; height: 30px; margin-top: 10px; align-items: flex-end;
+
+        /* Debug Logger (To see errors on mobile) */
+        #debug-log {
+            position: absolute; top: 0; left: 0; z-index: 5;
+            color: lime; font-size: 10px; background: rgba(0,0,0,0.5);
+            padding: 5px; max-width: 200px; pointer-events: none;
         }
-        .bar { width: 5px; background: white; height: 2px; transition: height 0.1s; }
     </style>
 </head>
 <body>
 
+    <div id="debug-log">System Log:<br></div>
+
     <div id="overlay">
-        <h1>Sonic Particles AI</h1>
-        <p>Microphone & Camera Access Required</p>
+        <h1 style="color:white; margin:0;">Magic Particles</h1>
+        <p style="color:#ccc;">Camera + Mic Required</p>
         <button id="start-btn">TAP TO START</button>
     </div>
 
-    <div id="ui-layer">
-        <h1>Voice + Gesture AI</h1>
-        <div class="instruction">🎤 Sing/Hum: Change Color & Vibrate</div>
-        <div class="instruction">☝️ 1-5 Fingers: Change Shape</div>
-        <div class="instruction">🤏 Pinch: Expand/Contract</div>
-        <div class="status" id="status-text">Waiting for user...</div>
-        <div class="bar-container" id="visualizer">
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-            <div class="bar"></div><div class="bar"></div>
-        </div>
+    <div id="video-container">
+        <video id="webcam" playsinline muted autoplay></video>
     </div>
 
-    <div id="video-container">
-        <video id="webcam" autoplay playsinline muted></video>
-    </div>
     <div id="canvas-container"></div>
 
     <script type="importmap">
@@ -85,71 +69,74 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
-        // --- Configuration ---
-        const PARTICLE_COUNT = 7000; // Thoda kam kiya mobile performance ke liye
-        const PARTICLE_SIZE = 0.2;
-        
+        // --- Logger Function ---
+        const logBox = document.getElementById('debug-log');
+        function log(msg) {
+            logBox.innerHTML += msg + "<br>";
+            console.log(msg);
+        }
+        window.onerror = function(msg, source, lineno) {
+            log("ERROR: " + msg + " at line " + lineno);
+        }
+
+        log("System initiating...");
+
+        // --- Config ---
+        const PARTICLE_COUNT = 3000; // Safe for mobile
+        const PARTICLE_SIZE = 0.25;
+
         // --- State ---
         let currentShape = 'sphere';
         let targetExpansion = 1.0;
-        let handHue = 0.5; // Controlled by Hand
-        let voiceHue = 0.5; // Controlled by Pitch
+        let handHue = 0.5;
+        let voiceHue = 0.5;
         let volume = 0;
         let handDetected = false;
-        
-        // --- Audio Globals ---
-        let audioContext, analyser, microphone, dataArray;
-        let isAudioActive = false;
 
-        // --- UI Handling ---
-        const startBtn = document.getElementById('start-btn');
-        const overlay = document.getElementById('overlay');
-        const statusText = document.getElementById('status-text');
-
-        startBtn.addEventListener('click', async () => {
-            overlay.style.display = 'none';
-            statusText.innerText = "Initializing AI...";
-            await initAudio();
-            setupMediaPipe(); // Start camera only after click
-        });
-
-        // --- Three.js Setup ---
+        // --- Scene Setup ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.03);
+        scene.fog = new THREE.FogExp2(0x000000, 0.04);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.z = 25;
+        camera.position.z = 20;
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
+        log("Renderer created.");
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5;
+        controls.autoRotateSpeed = 0.8;
 
-        // --- Particles ---
+        // --- Create Particles ---
         const geometry = new THREE.BufferGeometry();
-        const initialPositions = new Float32Array(PARTICLE_COUNT * 3);
         const currentPositions = new Float32Array(PARTICLE_COUNT * 3);
         const targetPositions = new Float32Array(PARTICLE_COUNT * 3);
         const colors = new Float32Array(PARTICLE_COUNT * 3);
 
         for (let i = 0; i < PARTICLE_COUNT; i++) {
-            const x = (Math.random() - 0.5) * 40;
-            const y = (Math.random() - 0.5) * 40;
-            const z = (Math.random() - 0.5) * 40;
-            
-            initialPositions[i*3] = x; currentPositions[i*3] = x; targetPositions[i*3] = x;
-            initialPositions[i*3+1] = y; currentPositions[i*3+1] = y; targetPositions[i*3+1] = y;
-            initialPositions[i*3+2] = z; currentPositions[i*3+2] = z; targetPositions[i*3+2] = z;
+            const x = (Math.random() - 0.5) * 30;
+            const y = (Math.random() - 0.5) * 30;
+            const z = (Math.random() - 0.5) * 30;
+            currentPositions[i*3] = x; currentPositions[i*3+1] = y; currentPositions[i*3+2] = z;
+            targetPositions[i*3] = x; targetPositions[i*3+1] = y; targetPositions[i*3+2] = z;
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        // Create texture manually (fail-safe)
+        const cvs = document.createElement('canvas'); cvs.width=32; cvs.height=32;
+        const ctx = cvs.getContext('2d');
+        const grad = ctx.createRadialGradient(16,16,0,16,16,16);
+        grad.addColorStop(0,'white'); grad.addColorStop(1,'transparent');
+        ctx.fillStyle = grad; ctx.fillRect(0,0,32,32);
+        const texture = new THREE.Texture(cvs);
+        texture.needsUpdate = true;
 
         const material = new THREE.PointsMaterial({
             size: PARTICLE_SIZE,
@@ -157,145 +144,164 @@
             blending: THREE.AdditiveBlending,
             depthWrite: false,
             transparent: true,
-            opacity: 0.9,
-            map: createCircleTexture()
+            map: texture
         });
 
         const particles = new THREE.Points(geometry, material);
         scene.add(particles);
+        log("Particles added to scene.");
 
-        // --- Shapes ---
+        // --- Shape Logic ---
         const Shapes = {
             sphere: (i) => {
                 const phi = Math.acos(-1 + (2 * i) / PARTICLE_COUNT);
                 const theta = Math.sqrt(PARTICLE_COUNT * Math.PI) * phi;
-                const r = 8;
+                const r = 7;
                 return { x: r * Math.cos(theta) * Math.sin(phi), y: r * Math.sin(theta) * Math.sin(phi), z: r * Math.cos(phi) };
             },
             heart: (i) => {
                 const t = (i / PARTICLE_COUNT) * Math.PI * 2;
                 const x = 16 * Math.pow(Math.sin(t), 3);
                 const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-                const z = (Math.random() - 0.5) * 4;
-                return { x: x * 0.5, y: y * 0.5, z: z };
-            },
-            flower: (i) => {
-                const u = Math.random() * Math.PI * 2;
-                const v = Math.random() * Math.PI;
-                const r = 5 + 3 * Math.sin(5 * u) * Math.sin(5 * v); 
-                return { x: r * Math.sin(v) * Math.cos(u), y: r * Math.sin(v) * Math.sin(u), z: r * Math.cos(v) };
+                return { x: x * 0.4, y: y * 0.4, z: (Math.random()-0.5)*4 };
             },
             saturn: (i) => {
-                if (i < PARTICLE_COUNT * 0.7) {
+                 if (i < PARTICLE_COUNT * 0.7) {
                     const phi = Math.acos(-1 + (2 * i) / (PARTICLE_COUNT * 0.7));
                     const theta = Math.sqrt(PARTICLE_COUNT * Math.PI) * phi;
-                    const r = 5;
+                    const r = 4;
                     return { x: r * Math.cos(theta) * Math.sin(phi), y: r * Math.sin(theta) * Math.sin(phi), z: r * Math.cos(phi) };
-                } else {
-                    const angle = Math.random() * Math.PI * 2;
-                    const dist = 7 + Math.random() * 4;
-                    return { x: dist * Math.cos(angle), y: (Math.random()-0.5)*0.2, z: dist * Math.sin(angle) };
                 }
-            },
-            dna: (i) => {
-                const t = (i / PARTICLE_COUNT) * 10 * Math.PI;
-                const y = (i / PARTICLE_COUNT) * 20 - 10;
-                const offset = (i % 2 === 0) ? 0 : Math.PI;
-                return { x: 3 * Math.cos(t + offset), y: y, z: 3 * Math.sin(t + offset) };
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 6 + Math.random() * 4;
+                return { x: dist * Math.cos(angle), y: (Math.random()-0.5)*0.2, z: dist * Math.sin(angle) };
             }
         };
 
-        function updateShapeTargets(shapeName) {
-            const generator = Shapes[shapeName];
-            if(!generator) return;
+        function updateShape(name) {
+            if(!Shapes[name]) return;
+            log("Morphing to: " + name);
             for(let i=0; i<PARTICLE_COUNT; i++) {
-                const pos = generator(i);
-                targetPositions[i*3] = pos.x; targetPositions[i*3+1] = pos.y; targetPositions[i*3+2] = pos.z;
+                const p = Shapes[name](i);
+                targetPositions[i*3] = p.x; targetPositions[i*3+1] = p.y; targetPositions[i*3+2] = p.z;
             }
         }
-        updateShapeTargets('sphere');
+        updateShape('sphere');
 
-        function createCircleTexture() {
-            const cvs = document.createElement('canvas'); cvs.width = 32; cvs.height = 32;
-            const ctx = cvs.getContext('2d');
-            const g = ctx.createRadialGradient(16,16,0,16,16,16);
-            g.addColorStop(0, 'white'); g.addColorStop(1, 'transparent');
-            ctx.fillStyle = g; ctx.fillRect(0,0,32,32);
-            return new THREE.Texture(cvs);
+        // --- Animation Loop (Running Immediately) ---
+        const colorObj = new THREE.Color();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Audio Influence
+            if(isAudioActive) {
+                updateAudioData();
+            }
+            
+            // Logic: Mix Hand & Voice
+            let finalHue = handDetected ? handHue : (voiceHue + timeOffset * 0.1);
+            if(!handDetected && !isAudioActive) finalHue = (Date.now() * 0.0001) % 1; // Default rainbow
+
+            colorObj.setHSL(finalHue, 1.0, 0.6);
+            
+            const exp = handDetected ? targetExpansion : (1 + volume * 2);
+            const vib = volume * 0.5;
+
+            const pos = geometry.attributes.position.array;
+            const col = geometry.attributes.color.array;
+
+            for(let i=0; i<PARTICLE_COUNT; i++) {
+                const i3 = i*3;
+                
+                // Move towards target
+                const tx = targetPositions[i3] * exp;
+                const ty = targetPositions[i3+1] * exp;
+                const tz = targetPositions[i3+2] * exp;
+
+                pos[i3] += (tx - pos[i3]) * 0.05;
+                pos[i3+1] += (ty - pos[i3+1]) * 0.05;
+                pos[i3+2] += (tz - pos[i3+2]) * 0.05;
+
+                // Vibration
+                if(vib > 0.01) {
+                    pos[i3] += (Math.random()-0.5)*vib;
+                    pos[i3+1] += (Math.random()-0.5)*vib;
+                    pos[i3+2] += (Math.random()-0.5)*vib;
+                }
+
+                // Color
+                col[i3] = THREE.MathUtils.lerp(col[i3], colorObj.r, 0.1);
+                col[i3+1] = THREE.MathUtils.lerp(col[i3+1], colorObj.g, 0.1);
+                col[i3+2] = THREE.MathUtils.lerp(col[i3+2], colorObj.b, 0.1);
+            }
+
+            geometry.attributes.position.needsUpdate = true;
+            geometry.attributes.color.needsUpdate = true;
+            
+            scene.rotation.y += 0.002;
+            controls.update();
+            renderer.render(scene, camera);
         }
-        createCircleTexture().needsUpdate = true;
+        
+        // Start animation immediately!
+        animate();
+        let timeOffset = 0;
 
-        // --- Audio Logic ---
-        async function initAudio() {
+        // --- Audio & Vision Setup (Triggered by Button) ---
+        let audioContext, analyser, dataArray;
+        let isAudioActive = false;
+        let handLandmarker, webcam;
+
+        document.getElementById('start-btn').addEventListener('click', async function() {
+            document.getElementById('overlay').style.display = 'none';
+            log("User clicked Start. Initializing...");
+
+            // 1. Setup Audio
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
-                microphone = audioContext.createMediaStreamSource(stream);
-                microphone.connect(analyser);
+                const src = audioContext.createMediaStreamSource(stream);
+                src.connect(analyser);
                 analyser.fftSize = 256;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
                 isAudioActive = true;
-            } catch (err) {
-                console.error("Audio error:", err);
-                statusText.innerText = "Audio Error: Check Permissions";
+                log("Audio Active.");
+            } catch(e) {
+                log("Audio Failed: " + e.message);
             }
-        }
 
-        // Simple Pitch Detection (Autocorrelation)
-        function getPitch() {
-            if (!isAudioActive) return 0.5;
+            // 2. Setup Vision
+            try {
+                log("Loading AI Model...");
+                const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`, delegate: "GPU" },
+                    runningMode: "VIDEO", numHands: 1
+                });
+                log("Model Loaded. Starting Camera...");
+                
+                const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webcam = document.getElementById('webcam');
+                webcam.srcObject = videoStream;
+                webcam.addEventListener('loadeddata', predictWebcam);
+                log("Camera Active.");
+            } catch(e) {
+                log("Camera/AI Failed: " + e.message);
+            }
+        });
+
+        function updateAudioData() {
             analyser.getByteTimeDomainData(dataArray);
-            
-            // Calculate Volume (RMS)
             let sum = 0;
             for(let i=0; i<dataArray.length; i++) {
                 const x = (dataArray[i] - 128) / 128;
                 sum += x*x;
             }
-            volume = Math.sqrt(sum / dataArray.length); // 0 to 1 approx
-
-            // Update UI Bars
-            const bars = document.querySelectorAll('.bar');
-            bars.forEach((bar, i) => {
-                bar.style.height = (volume * 100 * (Math.random() + 0.5)) + 'px';
-            });
-
-            // Very Basic Pitch Approximation based on Zero Crossings
-            // (Accurate pitch needs complex math, this is enough for visual FX)
-            let zeroCrossings = 0;
-            for(let i=1; i<dataArray.length; i++) {
-                if((dataArray[i-1] < 128 && dataArray[i] >= 128) || (dataArray[i-1] >= 128 && dataArray[i] < 128)) {
-                    zeroCrossings++;
-                }
-            }
-            
-            // Map zero crossings to 0-1 hue range
-            // Low voice ~ fewer crossings, High voice ~ more
-            const estimatedFreq = zeroCrossings / (dataArray.length / 2); // Roughly 0 to 1
-            return THREE.MathUtils.clamp(estimatedFreq * 2, 0, 1);
-        }
-
-        // --- MediaPipe Logic ---
-        let handLandmarker, webcam;
-        async function setupMediaPipe() {
-            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
-            handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`, delegate: "GPU" },
-                runningMode: "VIDEO", numHands: 1
-            });
-            startCamera();
-        }
-
-        function startCamera() {
-            webcam = document.getElementById('webcam');
-            // Important: We request video only here, audio is already active
-            navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-                webcam.srcObject = stream;
-                webcam.addEventListener('loadeddata', predictWebcam);
-                statusText.innerText = "Active: Sing or Gesture!";
-                document.getElementById('video-container').classList.add('active');
-            });
+            volume = Math.sqrt(sum / dataArray.length);
+            // Simple frequency hack for color
+            voiceHue = (volume * 5) % 1; 
         }
 
         let lastVideoTime = -1;
@@ -310,99 +316,26 @@
                     
                     // Pinch
                     const d = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
-                    targetExpansion = THREE.MathUtils.mapLinear(d, 0.02, 0.2, 0.5, 2.5);
-                    
-                    // Hand Position -> Hue
+                    targetExpansion = THREE.MathUtils.mapLinear(d, 0.02, 0.15, 0.5, 2.0);
                     handHue = lm[0].x;
 
-                    // Finger Count
+                    // Fingers
                     let count = 0;
                     if (lm[8].y < lm[6].y) count++;
                     if (lm[12].y < lm[10].y) count++;
                     if (lm[16].y < lm[14].y) count++;
                     if (lm[20].y < lm[18].y) count++;
-                    if (lm[4].x < lm[3].x && lm[5].x > lm[17].x) count++; // Simple Right hand thumb logic
-                    else if (lm[4].x > lm[3].x && lm[5].x < lm[17].x) count++; 
+                    
+                    if(count === 1) { if(currentShape !== 'sphere') { currentShape='sphere'; updateShape('sphere'); } }
+                    if(count === 2) { if(currentShape !== 'heart') { currentShape='heart'; updateShape('heart'); } }
+                    if(count >= 3) { if(currentShape !== 'saturn') { currentShape='saturn'; updateShape('saturn'); } }
 
-                    count = Math.max(1, count);
-                    const shapes = ['sphere', 'sphere', 'heart', 'flower', 'saturn', 'dna'];
-                    if (shapes[count] && shapes[count] !== currentShape) {
-                        currentShape = shapes[count];
-                        updateShapeTargets(currentShape);
-                    }
                 } else {
                     handDetected = false;
-                    targetExpansion = THREE.MathUtils.lerp(targetExpansion, 1.0, 0.05);
                 }
             }
             requestAnimationFrame(predictWebcam);
         }
-
-        // --- Animation ---
-        const colorObj = new THREE.Color();
-        
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Audio Updates
-            let currentPitch = 0.5;
-            if (isAudioActive) {
-                currentPitch = getPitch();
-                voiceHue = THREE.MathUtils.lerp(voiceHue, currentPitch, 0.1);
-            }
-
-            // Decide Final Hue (Mix Hand and Voice)
-            // If hand is detected, prioritize hand but let voice shift it slightly
-            // If no hand, pure voice visualization
-            let finalHue = handDetected ? (handHue * 0.8 + voiceHue * 0.2) : voiceHue;
-            
-            // Volume Effect (Vibration & Size)
-            const vibration = volume * 1.5; // More volume = more chaos
-            const volumeExpansion = 1 + (volume * 2); // Particles get bigger with sound
-
-            colorObj.setHSL(finalHue, 1.0, 0.6);
-            material.size = PARTICLE_SIZE * volumeExpansion;
-
-            const positions = geometry.attributes.position.array;
-            const cols = geometry.attributes.color.array;
-
-            for(let i=0; i<PARTICLE_COUNT; i++) {
-                const i3 = i*3;
-                
-                // Target with expansion
-                const tx = targetPositions[i3] * targetExpansion;
-                const ty = targetPositions[i3+1] * targetExpansion;
-                const tz = targetPositions[i3+2] * targetExpansion;
-
-                // Move logic
-                positions[i3] += (tx - positions[i3]) * 0.08;
-                positions[i3+1] += (ty - positions[i3+1]) * 0.08;
-                positions[i3+2] += (tz - positions[i3+2]) * 0.08;
-
-                // Add Vibration (Life/Noise)
-                // Base vibration + Voice Vibration
-                const vibe = 0.05 + vibration;
-                positions[i3] += (Math.random()-0.5) * vibe;
-                positions[i3+1] += (Math.random()-0.5) * vibe;
-                positions[i3+2] += (Math.random()-0.5) * vibe;
-
-                // Color mixing
-                cols[i3] = THREE.MathUtils.lerp(cols[i3], colorObj.r, 0.1);
-                cols[i3+1] = THREE.MathUtils.lerp(cols[i3+1], colorObj.g, 0.1);
-                cols[i3+2] = THREE.MathUtils.lerp(cols[i3+2], colorObj.b, 0.1);
-            }
-
-            geometry.attributes.position.needsUpdate = true;
-            geometry.attributes.color.needsUpdate = true;
-
-            // Rotate based on energy
-            scene.rotation.y += 0.002 + (volume * 0.05);
-
-            controls.update();
-            renderer.render(scene, camera);
-        }
-
-        animate();
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
