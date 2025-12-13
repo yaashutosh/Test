@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ultimate Particles</title>
+    <title>Magic Particles Fixed</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
         
-        /* ThreeJS Canvas */
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* Video Preview (Small) */
         #video-container {
             position: absolute; bottom: 10px; right: 10px; z-index: 2;
             width: 120px; height: 90px; border: 1px solid #444; border-radius: 8px; overflow: hidden;
@@ -18,7 +16,6 @@
         }
         video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Start Button / Overlay */
         #overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 100;
@@ -30,7 +27,6 @@
             border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px;
         }
 
-        /* Debug Logger (To see errors on mobile) */
         #debug-log {
             position: absolute; top: 0; left: 0; z-index: 5;
             color: lime; font-size: 10px; background: rgba(0,0,0,0.5);
@@ -69,7 +65,20 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
-        // --- Logger Function ---
+        // --- 1. GLOBAL VARIABLES (Moved to TOP to fix error) ---
+        let isAudioActive = false; // FIX: Declared first
+        let handDetected = false;
+        let audioContext, analyser, dataArray;
+        let handLandmarker, webcam;
+        
+        let currentShape = 'sphere';
+        let targetExpansion = 1.0;
+        let handHue = 0.5;
+        let voiceHue = 0.5;
+        let volume = 0;
+        let timeOffset = 0;
+
+        // --- Logger ---
         const logBox = document.getElementById('debug-log');
         function log(msg) {
             logBox.innerHTML += msg + "<br>";
@@ -82,18 +91,10 @@
         log("System initiating...");
 
         // --- Config ---
-        const PARTICLE_COUNT = 3000; // Safe for mobile
+        const PARTICLE_COUNT = 3000;
         const PARTICLE_SIZE = 0.25;
 
-        // --- State ---
-        let currentShape = 'sphere';
-        let targetExpansion = 1.0;
-        let handHue = 0.5;
-        let voiceHue = 0.5;
-        let volume = 0;
-        let handDetected = false;
-
-        // --- Scene Setup ---
+        // --- Three.js Setup ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x000000, 0.04);
@@ -112,7 +113,7 @@
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.8;
 
-        // --- Create Particles ---
+        // --- Particles ---
         const geometry = new THREE.BufferGeometry();
         const currentPositions = new Float32Array(PARTICLE_COUNT * 3);
         const targetPositions = new Float32Array(PARTICLE_COUNT * 3);
@@ -129,7 +130,7 @@
         geometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-        // Create texture manually (fail-safe)
+        // Texture
         const cvs = document.createElement('canvas'); cvs.width=32; cvs.height=32;
         const ctx = cvs.getContext('2d');
         const grad = ctx.createRadialGradient(16,16,0,16,16,16);
@@ -149,9 +150,9 @@
 
         const particles = new THREE.Points(geometry, material);
         scene.add(particles);
-        log("Particles added to scene.");
+        log("Particles added.");
 
-        // --- Shape Logic ---
+        // --- Shapes ---
         const Shapes = {
             sphere: (i) => {
                 const phi = Math.acos(-1 + (2 * i) / PARTICLE_COUNT);
@@ -188,20 +189,62 @@
         }
         updateShape('sphere');
 
-        // --- Animation Loop (Running Immediately) ---
+        // --- Functions ---
+        function updateAudioData() {
+            if(!analyser) return;
+            analyser.getByteTimeDomainData(dataArray);
+            let sum = 0;
+            for(let i=0; i<dataArray.length; i++) {
+                const x = (dataArray[i] - 128) / 128;
+                sum += x*x;
+            }
+            volume = Math.sqrt(sum / dataArray.length);
+            voiceHue = (volume * 5) % 1; 
+        }
+
+        let lastVideoTime = -1;
+        async function predictWebcam() {
+            if (webcam && lastVideoTime !== webcam.currentTime && handLandmarker) {
+                lastVideoTime = webcam.currentTime;
+                const result = await handLandmarker.detectForVideo(webcam, performance.now());
+                
+                if (result.landmarks && result.landmarks.length > 0) {
+                    handDetected = true;
+                    const lm = result.landmarks[0];
+                    
+                    const d = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
+                    targetExpansion = THREE.MathUtils.mapLinear(d, 0.02, 0.15, 0.5, 2.0);
+                    handHue = lm[0].x;
+
+                    let count = 0;
+                    if (lm[8].y < lm[6].y) count++;
+                    if (lm[12].y < lm[10].y) count++;
+                    if (lm[16].y < lm[14].y) count++;
+                    if (lm[20].y < lm[18].y) count++;
+                    
+                    if(count === 1 && currentShape !== 'sphere') { currentShape='sphere'; updateShape('sphere'); }
+                    if(count === 2 && currentShape !== 'heart') { currentShape='heart'; updateShape('heart'); }
+                    if(count >= 3 && currentShape !== 'saturn') { currentShape='saturn'; updateShape('saturn'); }
+
+                } else {
+                    handDetected = false;
+                }
+            }
+            requestAnimationFrame(predictWebcam);
+        }
+
+        // --- Animation Loop ---
         const colorObj = new THREE.Color();
         
         function animate() {
             requestAnimationFrame(animate);
 
-            // Audio Influence
             if(isAudioActive) {
                 updateAudioData();
             }
             
-            // Logic: Mix Hand & Voice
             let finalHue = handDetected ? handHue : (voiceHue + timeOffset * 0.1);
-            if(!handDetected && !isAudioActive) finalHue = (Date.now() * 0.0001) % 1; // Default rainbow
+            if(!handDetected && !isAudioActive) finalHue = (Date.now() * 0.0001) % 1; 
 
             colorObj.setHSL(finalHue, 1.0, 0.6);
             
@@ -214,7 +257,6 @@
             for(let i=0; i<PARTICLE_COUNT; i++) {
                 const i3 = i*3;
                 
-                // Move towards target
                 const tx = targetPositions[i3] * exp;
                 const ty = targetPositions[i3+1] * exp;
                 const tz = targetPositions[i3+2] * exp;
@@ -223,14 +265,12 @@
                 pos[i3+1] += (ty - pos[i3+1]) * 0.05;
                 pos[i3+2] += (tz - pos[i3+2]) * 0.05;
 
-                // Vibration
                 if(vib > 0.01) {
                     pos[i3] += (Math.random()-0.5)*vib;
                     pos[i3+1] += (Math.random()-0.5)*vib;
                     pos[i3+2] += (Math.random()-0.5)*vib;
                 }
 
-                // Color
                 col[i3] = THREE.MathUtils.lerp(col[i3], colorObj.r, 0.1);
                 col[i3+1] = THREE.MathUtils.lerp(col[i3+1], colorObj.g, 0.1);
                 col[i3+2] = THREE.MathUtils.lerp(col[i3+2], colorObj.b, 0.1);
@@ -244,20 +284,15 @@
             renderer.render(scene, camera);
         }
         
-        // Start animation immediately!
+        // Start LOOP
         animate();
-        let timeOffset = 0;
 
-        // --- Audio & Vision Setup (Triggered by Button) ---
-        let audioContext, analyser, dataArray;
-        let isAudioActive = false;
-        let handLandmarker, webcam;
-
+        // --- Buttons ---
         document.getElementById('start-btn').addEventListener('click', async function() {
             document.getElementById('overlay').style.display = 'none';
-            log("User clicked Start. Initializing...");
+            log("Starting inputs...");
 
-            // 1. Setup Audio
+            // Audio
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -266,76 +301,26 @@
                 src.connect(analyser);
                 analyser.fftSize = 256;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
-                isAudioActive = true;
-                log("Audio Active.");
-            } catch(e) {
-                log("Audio Failed: " + e.message);
-            }
+                isAudioActive = true; // Variable is now accessible
+                log("Audio OK.");
+            } catch(e) { log("Audio Error: " + e.message); }
 
-            // 2. Setup Vision
+            // Video
             try {
-                log("Loading AI Model...");
+                log("Loading AI...");
                 const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
                 handLandmarker = await HandLandmarker.createFromOptions(vision, {
                     baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`, delegate: "GPU" },
                     runningMode: "VIDEO", numHands: 1
                 });
-                log("Model Loaded. Starting Camera...");
                 
                 const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 webcam = document.getElementById('webcam');
                 webcam.srcObject = videoStream;
                 webcam.addEventListener('loadeddata', predictWebcam);
-                log("Camera Active.");
-            } catch(e) {
-                log("Camera/AI Failed: " + e.message);
-            }
+                log("Video OK.");
+            } catch(e) { log("Video Error: " + e.message); }
         });
-
-        function updateAudioData() {
-            analyser.getByteTimeDomainData(dataArray);
-            let sum = 0;
-            for(let i=0; i<dataArray.length; i++) {
-                const x = (dataArray[i] - 128) / 128;
-                sum += x*x;
-            }
-            volume = Math.sqrt(sum / dataArray.length);
-            // Simple frequency hack for color
-            voiceHue = (volume * 5) % 1; 
-        }
-
-        let lastVideoTime = -1;
-        async function predictWebcam() {
-            if (lastVideoTime !== webcam.currentTime && handLandmarker) {
-                lastVideoTime = webcam.currentTime;
-                const result = await handLandmarker.detectForVideo(webcam, performance.now());
-                
-                if (result.landmarks && result.landmarks.length > 0) {
-                    handDetected = true;
-                    const lm = result.landmarks[0];
-                    
-                    // Pinch
-                    const d = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
-                    targetExpansion = THREE.MathUtils.mapLinear(d, 0.02, 0.15, 0.5, 2.0);
-                    handHue = lm[0].x;
-
-                    // Fingers
-                    let count = 0;
-                    if (lm[8].y < lm[6].y) count++;
-                    if (lm[12].y < lm[10].y) count++;
-                    if (lm[16].y < lm[14].y) count++;
-                    if (lm[20].y < lm[18].y) count++;
-                    
-                    if(count === 1) { if(currentShape !== 'sphere') { currentShape='sphere'; updateShape('sphere'); } }
-                    if(count === 2) { if(currentShape !== 'heart') { currentShape='heart'; updateShape('heart'); } }
-                    if(count >= 3) { if(currentShape !== 'saturn') { currentShape='saturn'; updateShape('saturn'); } }
-
-                } else {
-                    handDetected = false;
-                }
-            }
-            requestAnimationFrame(predictWebcam);
-        }
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
