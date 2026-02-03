@@ -407,10 +407,193 @@
             }
         };
 
-        // --- TIMER ---
+      // --- TIMER ---
         setInterval(() => {
             const now = new Date();
             const end = new Date(); end.setHours(22, 0, 0, 0); // 10 PM
             const start = new Date(); start.setHours(4, 0, 0, 0); // 4 AM
 
-      
+            let diff, statusText, color;
+
+            if (now < start) {
+                diff = start - now; statusText = "STARTS IN"; color = "text-yellow-400";
+            } else if (now > end) {
+                statusText = "REST TIME"; 
+                document.getElementById('mission-timer').innerText = "00:00";
+                document.getElementById('countdown-text').innerText = "MISSION COMPLETED";
+                return;
+            } else {
+                diff = end - now; statusText = "MISSION ENDS IN";
+                color = (diff < 1000*60*60*4) ? "text-red-500 animate-pulse" : "text-white";
+            }
+
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            const timerEl = document.getElementById('mission-timer');
+            const textEl = document.getElementById('countdown-text');
+            
+            if (timerEl && textEl) {
+                timerEl.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                timerEl.className = `text-2xl font-mono font-bold leading-none ${color}`;
+                textEl.innerText = statusText;
+            }
+        }, 1000);
+
+        // --- UI RENDERING ---
+        const switchTab = (t) => {
+            document.getElementById('view-tasks').style.display = t==='tasks'?'block':'none';
+            document.getElementById('view-stats').style.display = t==='stats'?'block':'none';
+            document.getElementById('tab-btn-tasks').className = t==='tasks' ? 'flex-1 pb-3 text-xs uppercase font-bold tab-active' : 'flex-1 pb-3 text-xs uppercase font-bold tab-inactive';
+            document.getElementById('tab-btn-stats').className = t==='stats' ? 'flex-1 pb-3 text-xs uppercase font-bold tab-active' : 'flex-1 pb-3 text-xs uppercase font-bold tab-inactive';
+            if(t==='stats') updateStats();
+        };
+
+        const updateStats = () => {
+            let totalTasks = 0;
+            let totalDone = 0;
+            let totalSleep = 0;
+            const dataPoints = [];
+            const labels = [];
+
+            appState.days.forEach(d => {
+                const ts = d.slots.flatMap(s => s.tasks);
+                const dn = ts.filter(t => t.done).length;
+                totalTasks += ts.length;
+                totalDone += dn;
+                totalSleep += parseFloat(d.sleep || 0);
+                
+                const efficiency = ts.length ? Math.round((dn / ts.length) * 100) : 0;
+                dataPoints.push(efficiency);
+                labels.push(`D${d.date}`);
+            });
+
+            const avgSleep = (totalSleep / 7).toFixed(1);
+            const globalScore = totalTasks ? Math.round((totalDone / totalTasks) * 100) : 0;
+
+            document.getElementById('stats-score').innerText = `${globalScore}%`;
+            document.getElementById('stats-msg').innerText = globalScore > 80 ? "You are a machine! 🤖" : globalScore > 50 ? "Keep pushing! 🚀" : "Time to lock in. 🔒";
+            document.getElementById('stat-sleep').innerText = `${avgSleep}h`;
+            document.getElementById('stat-done').innerText = totalDone;
+
+            // Chart JS
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Efficiency %',
+                        data: dataPoints,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#09090b',
+                        pointBorderColor: '#3b82f6',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { color: '#27272a' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        };
+
+        const updateUI = () => {
+            // Safety check
+            if (!appState.days || !appState.days[appState.currentDay]) {
+                console.error("Critical State Error - Resetting");
+                localStorage.removeItem('tasker_v8');
+                location.reload();
+                return;
+            }
+
+            const curD = appState.days[appState.currentDay];
+            
+            // 1. Day Tabs
+            const dayTabsContainer = document.getElementById('dayTabs');
+            if(dayTabsContainer) {
+                dayTabsContainer.innerHTML = appState.days.map((d, i) => {
+                    const ts = d.slots.flatMap(s=>s.tasks); const dn = ts.filter(t=>t.done).length; const p = ts.length ? (dn/ts.length)*100 : 0;
+                    const isLate = i >= 3; 
+                    const activeClass = i===appState.currentDay ? (isLate ? 'bg-red-600 shadow-red-900/50' : 'bg-blue-600 shadow-blue-900/50') + ' text-white scale-105 shadow-lg' : 'bg-zinc-800 text-zinc-500 border border-zinc-700';
+                    
+                    return `<button onclick="appState.currentDay=${i};save()" class="flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center transition-all ${activeClass}">
+                        <span class="text-[9px] font-bold uppercase">Day</span><span class="text-lg font-bold brand-font">${d.date}</span>
+                        <div class="w-8 h-1 bg-black/20 mt-1 rounded-full overflow-hidden"><div class="h-full bg-white/80" style="width: ${p}%"></div></div>
+                    </button>`;
+                }).join('');
+            }
+            
+            // 2. Sleep & Naps
+            document.getElementById('sleep-slider').value = curD.sleep;
+            updateSleepDisplay(curD.sleep);
+            document.getElementById('nap-total-display').innerText = `Total Naps: ${curD.naps} min`;
+
+            // 3. Mood
+            ['bad','avg','good'].forEach(m => {
+                document.getElementById(`mood-${m}`).classList.remove('selected', 'opacity-100');
+                document.getElementById(`mood-${m}`).classList.add('opacity-50');
+            });
+            if(curD.mood) {
+                document.getElementById(`mood-${curD.mood}`).classList.add('selected', 'opacity-100');
+                document.getElementById(`mood-${curD.mood}`).classList.remove('opacity-50');
+            }
+
+            // 4. Progress Bar
+            const dTasks = curD.slots.flatMap(s=>s.tasks); const dDone = dTasks.filter(t=>t.done).length; const dPct = dTasks.length ? Math.round((dDone/dTasks.length)*100) : 0;
+            document.getElementById('mini-progress-text').innerText = `${dPct}%`;
+            document.getElementById('mini-progress-bar').style.width = `${dPct}%`;
+
+            // 5. Render Slots
+            const slotsContainer = document.getElementById('slots-container');
+            if(slotsContainer) {
+                slotsContainer.innerHTML = curD.slots.map((slot, sIdx) => {
+                    const inputId = `input-${appState.currentDay}-${sIdx}`;
+                    
+                    const tasksHtml = slot.tasks.map(t => `
+                        <div onclick="toggleTask(${appState.currentDay}, ${sIdx}, ${t.id})" class="group flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 transition-all cursor-pointer ${t.done ? 'opacity-50' : ''}">
+                            <input type="checkbox" class="custom-checkbox" ${t.done ? 'checked' : ''} readonly>
+                            <span class="flex-1 text-sm font-medium ${t.done ? 'line-through text-zinc-500' : 'text-zinc-200'}">${t.text}</span>
+                            <div class="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                <button onclick="openReschedule(${appState.currentDay}, ${sIdx}, ${t.id}, event)" class="text-zinc-500 hover:text-blue-400">➡️</button>
+                                <button onclick="deleteTask(${appState.currentDay}, ${sIdx}, ${t.id}, event)" class="text-zinc-500 hover:text-red-400">✕</button>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    return `
+                        <div class="anim-entry glass-panel rounded-xl overflow-hidden" style="animation-delay: ${sIdx * 0.1}s">
+                            <div class="bg-zinc-800/50 px-4 py-2 border-b border-zinc-700/50 flex justify-between items-center">
+                                <h3 class="font-bold text-xs uppercase tracking-wider text-blue-400">${slot.title}</h3>
+                                <span class="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">${slot.tasks.filter(t=>t.done).length}/${slot.tasks.length}</span>
+                            </div>
+                            <div class="p-3 space-y-2">
+                                ${tasksHtml}
+                                <div class="flex gap-2 mt-2">
+                                    <input id="${inputId}" type="text" placeholder="Add task..." class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none placeholder-zinc-600" onkeydown="if(event.key==='Enter') addTask(${appState.currentDay}, ${sIdx}, '${inputId}')">
+                                    <button onclick="addTask(${appState.currentDay}, ${sIdx}, '${inputId}')" class="bg-zinc-800 hover:bg-blue-600 hover:text-white text-zinc-400 px-3 rounded-lg font-bold transition-colors">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        };
+
+        // Initialize with delay to ensure DOM is ready
+        setTimeout(updateUI, 100);
+    </script>
+</body>
+</html>
+
+
