@@ -3,387 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#09090b">
+    
+    <!-- PWA Settings -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>TASKER PRO</title>
-    
-    <!-- Chart.js for Graphs -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Tailwind CSS -->
+    <meta name="theme-color" content="#09090b">
+    <title>TASKER v7.0</title>
+
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22TASKER%22%2C%22short_name%22%3A%22TASKER%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2309090b%22%2C%22theme_color%22%3A%22%2309090b%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F906%2F906334.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Inter:wght@400;600&display=swap');
         
-        :root { --bg: #09090b; --card: #18181b; --primary: #3b82f6; --success: #10b981; --danger: #ef4444; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: #e2e8f0; -webkit-tap-highlight-color: transparent; }
-        .font-display { font-family: 'Space Grotesk', sans-serif; }
-
-        /* Smooth Animations */
-        .glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .card-glass { background: rgba(39, 39, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(4px); }
+        :root { --primary: #3b82f6; --bg: #09090b; --card: #18181b; }
         
-        /* Status Lights & Animations */
-        @keyframes blinkRed { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--danger); } 50% { opacity: 0.4; box-shadow: none; } }
-        @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-        @keyframes fireFlicker { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            color: #e4e4e7;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        /* Performance Optimizations */
+        * { box-sizing: border-box; }
+        .will-change-transform { will-change: transform, opacity; }
+
+        .anim-entry { animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform: translateZ(0); opacity: 0; }
+        @keyframes fadeSlideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .premium-shadow { box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.6); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .brand-font { font-family: 'Space Grotesk', sans-serif; }
         
-        .status-light { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .light-red { background: var(--danger); animation: blinkRed 1s infinite; }
-        .light-green { background: var(--success); box-shadow: 0 0 8px var(--success); }
-        .light-yellow { background: #eab308; opacity: 0.5; }
-        .light-fire { font-size: 14px; animation: fireFlicker 0.5s infinite alternate; filter: drop-shadow(0 0 5px orange); }
+        .tab-active { color: white; border-bottom: 2px solid #3b82f6; }
+        .tab-inactive { color: #71717a; }
+        .safe-top { padding-top: env(safe-area-inset-top); }
 
-        /* Custom Scrollbar */
-        .hide-scroll::-webkit-scrollbar { display: none; }
-
-        /* Task Check Animation */
-        .check-anim { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .task-done { opacity: 0.5; text-decoration: line-through; }
-
-        /* Graph Container */
-        .chart-container { position: relative; height: 200px; width: 100%; }
-        
-        .safe-top { padding-top: max(env(safe-area-inset-top), 20px); }
+        /* Alarm Animation */
+        @keyframes alarmPulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .alarm-ring { animation: alarmPulse 1.5s infinite; }
     </style>
 </head>
-<body class="pb-28 safe-top">
+<body class="pb-24 safe-top">
 
     <!-- Header -->
-    <header class="fixed top-0 w-full z-50 glass pt-2 transition-all duration-300" id="header">
-        <div class="max-w-3xl mx-auto px-4 pb-2">
-            <div class="flex justify-between items-center mb-4 pt-2">
+    <header class="fixed top-0 w-full z-40 glass-panel pt-safe-top transition-transform duration-300">
+        <div class="max-w-md mx-auto px-4 pt-3 pb-0">
+            <div class="flex justify-between items-center mb-4">
                 <div>
-                    <h1 class="text-2xl font-bold font-display tracking-tight text-white flex items-center gap-2">
-                        TASKER<span class="text-blue-500">.PRO</span>
-                    </h1>
-                    <p class="text-[10px] text-slate-400 font-mono tracking-widest uppercase" id="current-date-display">SYNCING...</p>
+                    <h1 class="text-2xl font-bold brand-font tracking-tight text-white">TASKER<span class="text-blue-500">.</span></h1>
+                    <p class="text-[10px] text-zinc-500 font-medium tracking-widest uppercase" id="quote-display">LOADING...</p>
                 </div>
-                <button onclick="toggleStats()" class="bg-blue-600/20 text-blue-400 p-2 rounded-xl border border-blue-500/30 hover:bg-blue-600 hover:text-white transition-all">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" /></svg>
-                </button>
+                <div class="flex items-center gap-3">
+                    <!-- Alarm Button -->
+                    <button onclick="openAlarmModal()" class="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors relative">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        <div id="alarm-dot" class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full hidden"></div>
+                    </button>
+                    <!-- Sync Indicator -->
+                    <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    </div>
+                </div>
             </div>
-
-            <!-- Day Navigation -->
-            <div class="flex gap-3 overflow-x-auto pb-2 hide-scroll" id="dayTabs"></div>
+            <!-- Tabs -->
+            <div class="flex border-b border-zinc-800">
+                <button onclick="switchTab('tasks')" id="tab-btn-tasks" class="flex-1 pb-3 text-sm font-medium transition-colors tab-active">Tasks</button>
+                <button onclick="switchTab('stats')" id="tab-btn-stats" class="flex-1 pb-3 text-sm font-medium transition-colors tab-inactive">Performance</button>
+            </div>
         </div>
     </header>
 
-    <div class="h-40"></div>
+    <div class="h-32"></div>
 
-    <!-- Stats Modal (Hidden by default) -->
-    <div id="stats-panel" class="hidden fixed inset-0 z-[60] bg-black/90 backdrop-blur-md p-6 flex-col justify-center anim-fade">
-        <div class="max-w-3xl mx-auto w-full">
+    <!-- MAIN: TASK VIEW -->
+    <main id="view-tasks" class="max-w-md mx-auto px-4 space-y-6 block will-change-transform">
+        <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2" id="dayTabs"></div>
+
+        <div class="glass-panel rounded-xl p-4 flex items-center justify-between premium-shadow">
+            <div>
+                <div class="text-xs text-zinc-500 uppercase font-bold tracking-wider">Daily Goal</div>
+                <div class="text-xl font-bold text-white" id="mini-progress-text">0%</div>
+            </div>
+            <div class="w-24 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <div id="mini-progress-bar" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="slots-container" class="space-y-4"></div>
+        
+        <!-- Next Alarm Display -->
+        <div id="next-alarm-display" class="hidden text-center mt-6 p-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
+            <p class="text-[10px] text-zinc-500 uppercase font-bold">Next Alarm set for</p>
+            <p class="text-lg font-mono text-white" id="alarm-time-display">--:--</p>
+        </div>
+
+        <div class="h-10 text-center text-zinc-700 text-xs mt-4">TASKER v7.0 • ULTRA PERFORMANCE</div>
+    </main>
+
+    <!-- MAIN: STATS VIEW -->
+    <main id="view-stats" class="max-w-md mx-auto px-4 space-y-6 hidden anim-entry">
+        <div class="glass-panel rounded-2xl p-6 text-center premium-shadow border-blue-500/20 border">
+            <div class="text-xs text-blue-400 font-bold uppercase tracking-widest mb-2">AI Performance Insight</div>
+            <div class="text-3xl font-bold text-white mb-1" id="stats-score">0%</div>
+            <p class="text-sm text-zinc-400" id="stats-msg">Calculating...</p>
+        </div>
+        <div class="glass-panel rounded-2xl p-4">
+            <canvas id="performanceChart" height="200"></canvas>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+                <div class="text-zinc-500 text-xs mb-1">Total Tasks</div>
+                <div class="text-2xl font-bold text-white" id="stat-total">0</div>
+            </div>
+            <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+                <div class="text-zinc-500 text-xs mb-1">Completed</div>
+                <div class="text-2xl font-bold text-emerald-400" id="stat-done">0</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- RESCHEDULE MODAL -->
+    <div id="schedule-modal" class="fixed inset-0 z-[60] hidden flex-col justify-end sm:justify-center bg-black/80 backdrop-blur-sm">
+        <div class="w-full sm:max-w-md mx-auto glass-panel p-6 rounded-t-2xl sm:rounded-2xl shadow-2xl border-t border-blue-500/50 anim-entry">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold font-display text-white">Performance Analytics</h2>
-                <button onclick="toggleStats()" class="text-slate-400 text-2xl">✕</button>
+                <div><h3 class="text-lg font-bold text-white">🚀 Reschedule</h3><p class="text-xs text-blue-300 font-mono">Move task to another day</p></div>
+                <button onclick="closeModal('schedule-modal')" class="text-zinc-400 bg-zinc-800 p-2 rounded-full">✕</button>
             </div>
-            
-            <!-- Graph -->
-            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 mb-6">
-                <div class="chart-container">
-                    <canvas id="performanceChart"></canvas>
-                </div>
+            <div class="space-y-4 mb-6">
+                <div><label class="block text-xs text-zinc-400 mb-1 uppercase font-bold">Target Day</label><select id="modal-day-select" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white text-sm"></select></div>
+                <div><label class="block text-xs text-zinc-400 mb-1 uppercase font-bold">Target Slot</label><select id="modal-slot-select" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white text-sm"><option value="0">Morning Grind</option><option value="1">GK & Strategy</option><option value="2">Deep Theory</option><option value="3">Night Review</option></select></div>
             </div>
-
-            <!-- Insights -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <div class="text-slate-400 text-xs uppercase font-bold">Total Tasks</div>
-                    <div class="text-2xl font-bold text-white mt-1" id="stat-total">0</div>
-                </div>
-                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <div class="text-slate-400 text-xs uppercase font-bold">Completion Rate</div>
-                    <div class="text-2xl font-bold text-blue-400 mt-1" id="stat-rate">0%</div>
-                </div>
-            </div>
-            
-            <div class="mt-6 text-center">
-                <p id="motivation-text" class="text-sm font-mono text-yellow-400 italic">"Calculating your destiny..."</p>
-            </div>
+            <button onclick="confirmSchedule()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl">Confirm Move</button>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="max-w-3xl mx-auto px-4 space-y-6" id="app"></main>
+    <!-- ALARM SET MODAL -->
+    <div id="alarm-modal" class="fixed inset-0 z-[60] hidden flex-col justify-center items-center bg-black/80 backdrop-blur-sm">
+        <div class="w-11/12 max-w-sm glass-panel p-6 rounded-2xl shadow-2xl border border-zinc-700 anim-entry">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white">⏰ Set Alarm</h3>
+                <button onclick="closeModal('alarm-modal')" class="text-zinc-400 hover:text-white">✕</button>
+            </div>
+            
+            <div class="flex justify-center mb-8">
+                <input type="time" id="alarm-time-input" class="bg-zinc-900 text-white text-4xl p-4 rounded-xl border border-zinc-700 focus:border-blue-500 outline-none font-mono">
+            </div>
+
+            <div class="flex items-center justify-between mb-6 bg-zinc-900/50 p-3 rounded-lg">
+                <span class="text-sm text-zinc-300">Enable Alarm</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="alarm-toggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            <button onclick="saveAlarm()" class="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors">Save Alarm</button>
+        </div>
+    </div>
+
+    <!-- ALARM RINGING SCREEN -->
+    <div id="alarm-ringing-screen" class="fixed inset-0 z-[100] hidden flex-col justify-center items-center bg-red-900/90 backdrop-blur-md">
+        <div class="alarm-ring w-40 h-40 rounded-full bg-red-600 flex items-center justify-center mb-8 shadow-2xl">
+            <svg class="w-20 h-20 text-white animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+        </div>
+        <h1 class="text-5xl font-bold text-white mb-2 tracking-tighter brand-font">WAKE UP!</h1>
+        <p class="text-red-200 text-lg mb-10">Time to grind.</p>
+        <button onclick="stopAlarm()" class="px-10 py-4 bg-white text-red-900 font-bold text-xl rounded-full shadow-lg hover:scale-105 transition-transform">STOP ALARM</button>
+    </div>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confetti" class="fixed inset-0 pointer-events-none z-[50]"></canvas>
 
     <script>
-        // --- 🎵 Sound Engine (Premium) ---
+        const QUOTES = ["Discipline is doing what needs to be done.", "Your future is created by what you do today.", "Don't stop when you're tired. Stop when you're done.", "Focus on the process.", "Small steps lead to big results."];
+        const CORE_TASKS = ["DC Generator", "DC Motor", "Alternator", "1-Phase Motor", "3-Phase Induction"];
+        
+        // State Initialization
+        let appState = JSON.parse(localStorage.getItem('tasker_v7')) || { 
+            currentDay: 0, 
+            alarm: { time: "", enabled: false }, // New Alarm State
+            days: Array.from({ length: 7 }, (_, i) => ({ 
+                id: i, date: 4 + i, 
+                slots: [ 
+                    { id: 's1', title: 'Morning Grind (04-07 AM)', tasks: CORE_TASKS.map(t => ({id: Date.now()+Math.random(), text: t, done: false})) }, 
+                    { id: 's2', title: 'GK & Strategy (09-02 PM)', tasks: [] }, 
+                    { id: 's3', title: 'Deep Theory (02:30-07 PM)', tasks: [] }, 
+                    { id: 's4', title: 'Night Review (08-10 PM)', tasks: [] } 
+                ] 
+            })) 
+        };
+
+        let pendingTask = null;
+        let alarmInterval = null;
+        let isRinging = false;
+
+        // --- 🎵 SOUND ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSfx(type) {
+        
+        const playSound = (type) => {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            gain.connect(audioCtx.destination); osc.connect(gain);
-            
+            const osc = audioCtx.createOscillator(); 
+            const gain = audioCtx.createGain(); 
             const now = audioCtx.currentTime;
-            if (type === 'check') {
-                osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.start(); osc.stop(now + 0.2);
-            } else if (type === 'add') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start(); osc.stop(now + 0.1);
+            
+            if (type === 'click') { 
+                osc.frequency.setValueAtTime(600, now); gain.gain.setValueAtTime(0.05, now); osc.start(); osc.stop(now + 0.05); 
+            } else if (type === 'done') { 
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(500, now); osc.frequency.linearRampToValueAtTime(1000, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3); osc.start(); osc.stop(now + 0.3); triggerConfetti(); 
+            } else if (type === 'alarm') {
+                // LOUD ALARM SOUND
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.linearRampToValueAtTime(400, now + 0.5);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + 0.5);
+                osc.start(); osc.stop(now + 0.5);
             }
+            osc.connect(gain); gain.connect(audioCtx.destination);
+        };
+
+        const save = () => { localStorage.setItem('tasker_v7', JSON.stringify(appState)); updateUI(); };
+        
+        // --- ⏰ ALARM LOGIC ---
+        function openAlarmModal() {
+            document.getElementById('alarm-time-input').value = appState.alarm.time;
+            document.getElementById('alarm-toggle').checked = appState.alarm.enabled;
+            document.getElementById('alarm-modal').classList.remove('hidden');
+            document.getElementById('alarm-modal').classList.add('flex');
         }
 
-        // --- 💾 Data & Logic ---
-        const START_DAY_NUM = 4; // 4th of the month
-        const MONTH_NAME = "FEB"; // Just for display
-        
-        let appData = JSON.parse(localStorage.getItem('tasker_pro_v1'));
-
-        // Initialize empty data if new
-        if (!appData) {
-            const coreTasks = ["DC Generator", "DC Motor", "Alternator", "1-Phase Motor", "3-Phase Induction"];
-            appData = {
-                days: Array.from({ length: 7 }, (_, i) => ({
-                    date: START_DAY_NUM + i,
-                    slots: [
-                        { title: 'Morning Core (Fixed)', time: '04-07 AM', color: 'blue', tasks: coreTasks.map(t => ({ id: Date.now()+Math.random(), text: t, done: false })) },
-                        { title: 'GK & Non-Tech', time: '09-02 PM', color: 'orange', tasks: [] }, // Empty
-                        { title: 'Theory Deep Dive', time: '02-07 PM', color: 'green', tasks: [] }, // Empty
-                        { title: 'Night Review', time: '08-10 PM', color: 'purple', tasks: [] } // Empty
-                    ]
-                }))
-            };
+        function saveAlarm() {
+            const time = document.getElementById('alarm-time-input').value;
+            const enabled = document.getElementById('alarm-toggle').checked;
+            appState.alarm = { time, enabled };
             save();
+            closeModal('alarm-modal');
+            checkAlarmDot();
         }
 
-        function save() {
-            localStorage.setItem('tasker_pro_v1', JSON.stringify(appData));
-            updateUI();
-        }
-
-        // --- 🗓️ Date & State Tracking ---
-        let currentViewDayIndex = 0;
-        
-        function detectRealDate() {
-            const today = new Date();
-            const dateNum = today.getDate();
+        function checkAlarmDot() {
+            const dot = document.getElementById('alarm-dot');
+            const display = document.getElementById('next-alarm-display');
+            const timeDisp = document.getElementById('alarm-time-display');
             
-            // Display Date
-            const dateOptions = { weekday: 'long', month: 'short', day: 'numeric' };
-            document.getElementById('current-date-display').innerText = today.toLocaleDateString('en-US', dateOptions);
-
-            // Find which day of the challenge is today
-            const index = dateNum - START_DAY_NUM;
-            if (index >= 0 && index < 7) {
-                currentViewDayIndex = index;
+            if(appState.alarm.enabled && appState.alarm.time) {
+                dot.classList.remove('hidden');
+                display.classList.remove('hidden');
+                timeDisp.innerText = appState.alarm.time;
             } else {
-                currentViewDayIndex = 0; // Default to start if out of range
-            }
-            updateUI();
-        }
-
-        // --- 📊 Analytics Logic ---
-        let chartInstance = null;
-
-        function getDayStats(dayIndex) {
-            const day = appData.days[dayIndex];
-            const allTasks = day.slots.flatMap(s => s.tasks);
-            if (allTasks.length === 0) return { pct: 0, status: 'empty' };
-            
-            const done = allTasks.filter(t => t.done).length;
-            const pct = Math.round((done / allTasks.length) * 100);
-            
-            let status = 'neutral';
-            if (pct >= 95) status = 'fire';
-            else if (pct >= 80) status = 'good';
-            else if (pct < 80 && pct > 0) status = 'bad';
-            
-            return { pct, status, done, total: allTasks.length };
-        }
-
-        function toggleStats() {
-            const modal = document.getElementById('stats-panel');
-            const isHidden = modal.classList.contains('hidden');
-            
-            if (isHidden) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                renderChart();
-            } else {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
+                dot.classList.add('hidden');
+                display.classList.add('hidden');
             }
         }
 
-        function renderChart() {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            const dataPoints = appData.days.map((_, i) => getDayStats(i).pct);
-            const labels = appData.days.map(d => `${d.date}th`);
-            
-            // Calculate Aggregates
-            const totalTasks = appData.days.flatMap(d => d.slots.flatMap(s => s.tasks)).length;
-            const totalDone = appData.days.flatMap(d => d.slots.flatMap(s => s.tasks)).filter(t => t.done).length;
-            const globalRate = totalTasks ? Math.round((totalDone/totalTasks)*100) : 0;
-
-            document.getElementById('stat-total').innerText = totalDone + " / " + totalTasks;
-            document.getElementById('stat-rate').innerText = globalRate + "%";
-            
-            // Motivation Logic
-            const quoteEl = document.getElementById('motivation-text');
-            if (globalRate > 90) quoteEl.innerText = "🔥 UNSTOPPABLE! You are crushing it!";
-            else if (globalRate > 75) quoteEl.innerText = "💪 Solid Progress. Keep pushing!";
-            else quoteEl.innerText = "⚠️ Focus Needed. Don't break the chain!";
-
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Completion %',
-                        data: dataPoints,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4, // Smooth curves
-                        fill: true,
-                        pointBackgroundColor: '#10b981',
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, max: 100, grid: { color: '#334155' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        // --- ⚡ UI Rendering ---
-        function updateUI() {
-            const dayContainer = document.getElementById('dayTabs');
-            const appContainer = document.getElementById('app');
-            const currentDayData = appData.days[currentViewDayIndex];
-
-            // 1. Render Day Tabs (with Lights)
-            dayContainer.innerHTML = appData.days.map((d, i) => {
-                const isActive = i === currentViewDayIndex;
-                const stats = getDayStats(i);
+        function startAlarmLoop() {
+            if(alarmInterval) clearInterval(alarmInterval);
+            alarmInterval = setInterval(() => {
+                if(!appState.alarm.enabled || !appState.alarm.time || isRinging) return;
                 
-                // Status Light Logic
-                let indicator = '';
-                if (stats.status === 'fire') indicator = `<div class="absolute -top-1 -right-1">🔥</div>`;
-                else if (stats.status === 'bad') indicator = `<div class="absolute top-1 right-1 status-light light-red"></div>`;
-                else if (stats.status === 'good') indicator = `<div class="absolute top-1 right-1 status-light light-green"></div>`;
-                else indicator = `<div class="absolute top-1 right-1 status-light light-yellow"></div>`;
-
-                return `
-                    <button onclick="currentViewDayIndex=${i}; updateUI();" 
-                        class="relative flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${isActive ? 'bg-slate-800 border-2 border-blue-500 shadow-lg shadow-blue-900/50 scale-105' : 'bg-slate-900 border border-slate-800 opacity-70'}">
-                        ${indicator}
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">Day</span>
-                        <span class="text-2xl font-display font-bold ${isActive ? 'text-white' : 'text-slate-400'}">${d.date}</span>
-                        <div class="mt-1 w-8 h-1 bg-slate-700 rounded-full overflow-hidden">
-                            <div class="h-full ${stats.pct < 50 ? 'bg-red-500' : 'bg-green-500'}" style="width: ${stats.pct}%"></div>
-                        </div>
-                    </button>
-                `;
-            }).join('');
-
-            // 2. Render Main Tasks
-            // Header Progress
-            const dayStats = getDayStats(currentViewDayIndex);
-            let html = `
-                <div class="mb-8 p-1">
-                    <div class="flex justify-between items-end mb-2">
-                        <h2 class="text-xl font-bold text-white">Today's Targets</h2>
-                        <div class="text-3xl font-display font-bold ${dayStats.pct < 80 ? 'text-red-400' : 'text-green-400'}">${dayStats.pct}%</div>
-                    </div>
-                    <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                        <div class="h-full transition-all duration-500 ${dayStats.pct < 80 ? 'bg-red-500' : (dayStats.pct >= 95 ? 'bg-gradient-to-r from-orange-400 to-red-500' : 'bg-green-500')}" style="width: ${dayStats.pct}%"></div>
-                    </div>
-                    ${dayStats.pct < 80 && dayStats.total > 0 ? '<div class="text-xs text-red-400 mt-2 text-center animate-pulse">⚠️ Performance is below 80%. Push harder!</div>' : ''}
-                </div>
-            `;
-
-            // Slots
-            html += currentDayData.slots.map((slot, sIdx) => {
-                const theme = {
-                    blue: 'border-l-blue-500', 
-                    orange: 'border-l-orange-500', 
-                    green: 'border-l-green-500', 
-                    purple: 'border-l-purple-500' 
-                }[slot.color];
-
-                return `
-                <div class="mb-5 bg-slate-900/50 backdrop-blur-sm border-l-4 ${theme} rounded-r-xl border-y border-r border-slate-800/50 overflow-hidden">
-                    <div class="p-4 bg-slate-800/30 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-slate-200 text-lg">${slot.title}</h3>
-                            <span class="text-xs font-mono text-slate-500">${slot.time}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="p-4 space-y-3">
-                        ${slot.tasks.map(t => `
-                            <div class="flex items-start gap-3 group">
-                                <button onclick="toggleTask(${sIdx}, ${t.id})" 
-                                    class="mt-0.5 w-6 h-6 rounded-md border-2 border-slate-600 flex items-center justify-center transition-all check-anim ${t.done ? 'bg-green-500 border-green-500' : 'hover:border-blue-500'}">
-                                    ${t.done ? '✓' : ''}
-                                </button>
-                                <div class="flex-1 transition-all ${t.done ? 'task-done' : ''}">
-                                    <p class="text-sm font-medium text-slate-200">${t.text}</p>
-                                </div>
-                                <button onclick="deleteTask(${sIdx}, ${t.id})" class="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div class="px-4 pb-4">
-                        <div class="flex items-center gap-2 bg-slate-950/50 rounded-lg border border-slate-800 focus-within:border-blue-500/50 transition-colors p-1">
-                            <span class="pl-2 text-slate-500 text-lg">+</span>
-                            <input type="text" id="in-${sIdx}" 
-                                placeholder="Add new task..." 
-                                class="bg-transparent border-none outline-none text-sm text-white w-full h-8"
-                                onkeydown="if(event.key==='Enter') addTask(${sIdx})">
-                            <button onclick="addTask(${sIdx})" class="bg-slate-800 hover:bg-slate-700 text-xs text-white px-3 py-1.5 rounded-md font-bold transition-colors">ADD</button>
-                        </div>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            appContainer.innerHTML = html;
+                const now = new Date();
+                const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                
+                if(currentTime === appState.alarm.time && now.getSeconds() < 2) {
+                    triggerAlarm();
+                }
+            }, 1000);
         }
 
-        // --- Actions ---
-        function toggleTask(slotIdx, taskId) {
-            const slot = appData.days[currentViewDayIndex].slots[slotIdx];
-            const task = slot.tasks.find(t => t.id === taskId);
-            task.done = !task.done;
-            if (task.done) playSfx('check');
-            save();
+        let ringLoop = null;
+        function triggerAlarm() {
+            isRinging = true;
+            document.getElementById('alarm-ringing-screen').classList.remove('hidden');
+            document.getElementById('alarm-ringing-screen').classList.add('flex');
+            
+            // Play sound loop
+            playSound('alarm');
+            ringLoop = setInterval(() => playSound('alarm'), 800);
         }
 
-        function addTask(slotIdx) {
-            const input = document.getElementById(`in-${slotIdx}`);
-            const text = input.value.trim();
-            if (text) {
-                appData.days[currentViewDayIndex].slots[slotIdx].tasks.push({
-                    id: Date.now(),
-                    text: text,
-                    done: false
-                });
-                playSfx('add');
-                input.value = '';
-                save();
-                // Keep focus
-                setTimeout(() => document.getElementById(`in-${slotIdx}`).focus(), 10);
-            }
+        function stopAlarm() {
+            isRinging = false;
+            clearInterval(ringLoop);
+            document.getElementById('alarm-ringing-screen').classList.add('hidden');
+            document.getElementById('alarm-ringing-screen').classList.remove('flex');
         }
 
-        function deleteTask(slotIdx, taskId) {
-            if(confirm("Delete this task?")) {
-                const slot = appData.days[currentViewDayIndex].slots[slotIdx];
-                slot.tasks = slot.tasks.filter(t => t.id !== taskId);
-  
+        // --- CORE FUNCTIONS (Unchanged logic) ---
+        const toggleTask = (d, s, t) => { const task = appState.days[d].slots[s].tasks.find(x => x.id === t); task.done = !task.done; playSound(task.done ? 'done' : 'click'); save(); };
+        const deleteTask = (d, s, t, e) => { e.stopPropagation(); if(confirm('Remove?')) { const sl = appState.days[d].slots[s]; sl.tasks = sl.tasks.filter(x => x.id !== t); save(); } };
+        const addTask = (d, s, i) => { const v = document.getElementById(i).value.trim(); if(v) { appState.days[d].slots[s].tasks.push({id: Date.now(), text: v, done: false}); document.getElementById(i).value = ''; playSound('click'); save(); } };
+
+        // Schedule Logic
+        const initSchedule = (d, s, t, e) => {
+            e.stopPropagation();
+            const task = appState.days[d].slots[s].tasks.find(x => x.id === t);
+            pendingTask = { text: task.text, oldD: d, oldS: s, oldId: t };
+            const sel = document.getElementById('modal-day-select');
+            sel.innerHTML = appState.days.map((day, i) => `<option value="${i}">Day ${i+1} (${day.date}th) ${i===d?'(Current)':''}</option>`).join('');
+            sel.value = d; document.getElementById('modal-slot-select').value = s;
+            document.getElementById('schedule-modal').classList.remove('hidden');
+            document.getElementById('schedule-modal').classList.add('flex');
+        };
+        const closeModal = (id) => { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); };
+        const confirmSchedule = () => {
+            if(!pendingTask) return;
+            const newD = parseInt(document.getElementById('modal-day-select').value);
+            const newS = parseInt(document.getElementById('modal-slot-select').value);
+            appState.days[newD].slots[newS].tasks.push({ id: Date.now(), text: pendingTask.text, done: false, isRescheduled: true });
+            const oldTask = appState.days[pendingTask.oldD].slots[pendingTask.oldS].tasks.find(t => t.id === pendingTask.oldId);
+            if(oldTask) oldTask.hasScheduledCopy = true;
+            save(); closeModal('schedule-modal'); playSound('done');
+        };
+
+        // Render Logic
+        const updateUI = () => {
+            const curD = appState.days[appState.currentDay];
+            document.getElementById('dayTabs').innerHTML = appState.days.map((d, i) => {
+                const ts = d.slots.flatMap(s=>s.tasks); const p = ts.length ? (ts.filter(t=>t.done).l
