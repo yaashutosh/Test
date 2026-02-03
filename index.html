@@ -357,7 +357,33 @@
         }
 
         // --- Actions ---
-        function toggleTask(slotIdx, taskId
+        function toggleTask(slotIdx, taskId) {
+            const slot = appData.days[currentViewDayIndex].slots[slotIdx];
+            const task = slot.tasks.find(t => t.id === taskId);
+            task.done = !task.done;
+            if (task.done) playSfx('check');
+            save();
+        }
 
+        function addTask(slotIdx) {
+            const input = document.getElementById(`in-${slotIdx}`);
+            const text = input.value.trim();
+            if (text) {
+                appData.days[currentViewDayIndex].slots[slotIdx].tasks.push({
+                    id: Date.now(),
+                    text: text,
+                    done: false
+                });
+                playSfx('add');
+                input.value = '';
+                save();
+                // Keep focus
+                setTimeout(() => document.getElementById(`in-${slotIdx}`).focus(), 10);
+            }
+        }
 
-        
+        function deleteTask(slotIdx, taskId) {
+            if(confirm("Delete this task?")) {
+                const slot = appData.days[currentViewDayIndex].slots[slotIdx];
+                slot.tasks = slot.tasks.filter(t => t.id !== taskId);
+  
