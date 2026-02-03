@@ -3,128 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gesture Controlled 3D Particles</title>
+    <title>Mission JVVN/RVUN Tracker</title>
+    <!-- Tailwind CSS for styling (No installation needed) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; }
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        #video-container {
-            position: absolute; bottom: 20px; right: 20px; z-index: 2;
-            width: 240px; height: 180px; border: 2px solid #333; border-radius: 10px; overflow: hidden;
-            transform: scaleX(-1); /* Mirror video for intuitive feel */
-            opacity: 0.7;
-        }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        #ui-layer {
-            position: absolute; top: 20px; left: 20px; z-index: 3;
-            color: #00ffcc; pointer-events: none;
-        }
-        h1 { font-size: 1.2rem; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px; }
-        .instruction { font-size: 0.9rem; margin-bottom: 5px; opacity: 0.8; }
-        .status { margin-top: 15px; font-weight: bold; color: #fff; }
-        .loading {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; font-size: 1.5rem; z-index: 10;
-        }
+        body { font-family: sans-serif; background-color: #f3f4f6; }
+        .checkbox:checked + div { background-color: #10b981; border-color: #10b981; }
+        .checkbox:checked + div svg { display: block; }
+        .weak-active { color: #ef4444; background-color: #fee2e2; border: 1px solid #fca5a5; }
     </style>
 </head>
-<body>
+<body class="pb-10">
 
-    <div id="loading" class="loading">Initializing Vision AI...</div>
-
-    <div id="ui-layer">
-        <h1>Particle Morph AI</h1>
-        <div class="instruction">☝️ 1 Finger: Sphere</div>
-        <div class="instruction">✌️ 2 Fingers: Heart</div>
-        <div class="instruction">🤟 3 Fingers: Flower</div>
-        <div class="instruction">🖖 4 Fingers: Saturn</div>
-        <div class="instruction">🖐️ 5 Fingers: DNA Helix</div>
-        <div class="instruction">---</div>
-        <div class="instruction">🤏 Pinch: Expand/Contract</div>
-        <div class="instruction">↔️ Move Hand L/R: Change Color</div>
-        <div class="status" id="status-text">Status: Waiting for camera...</div>
+    <!-- Header -->
+    <div class="bg-blue-800 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold">Mission RVUN/JVVN</h1>
+                <p class="text-xs text-blue-200">7 Days Challenge (Auto-Save ON)</p>
+            </div>
+            <div class="text-right">
+                <button onclick="resetData()" class="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-white">Reset All</button>
+            </div>
+        </div>
+        
+        <!-- Day Navigation -->
+        <div class="max-w-md mx-auto mt-4 flex gap-2 overflow-x-auto pb-2" id="dayTabs">
+            <!-- Tabs will be injected here by JS -->
+        </div>
     </div>
 
-    <div id="video-container">
-        <video id="webcam" autoplay playsinline></video>
+    <!-- Main Content -->
+    <div class="max-w-md mx-auto p-4" id="appContent">
+        <!-- Content will be injected here by JS -->
     </div>
-    <div id="canvas-container"></div>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-                "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3"
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA & CONFIG ---
+        const startDate = 4;
+        const totalDays = 7;
+        
+        const coreChapters = [
+            { id: 13, name: "DC Generator (दिष्ट धारा जनित्र)" },
+            { id: 14, name: "DC Motor (दिष्ट धारा मोटर)" },
+            { id: 15, name: "Alternator (प्रत्यावर्तक)" },
+            { id: 16, name: "1-Phase Motor (एकल कला मोटर)" },
+            { id: 17, name: "3-Phase Induction Motor (त्रिकला प्रेरण मोटर)" }
+        ];
+
+        const scheduleBatches = {
+            0: [ // Day 4
+                { id: 1, name: "Charge & Static Electricity" }, { id: 2, name: "Resistors (प्रतिरोधक)" },
+                { id: 3, name: "D.C. Theory" }, { id: 25, name: "Safety Devices" }, { id: 4, name: "Capacitor & Inductor" }
+            ],
+            1: [ // Day 5
+                { id: 5, name: "A.C. Theory & Polyphase" }, { id: 6, name: "Cells & Battery" },
+                { id: 7, name: "Magnetism" }, { id: 8, name: "Earthing" }, { id: 9, name: "Underground Cables" }
+            ],
+            2: [ // Day 6
+                { id: 10, name: "Cables & Joints" }, { id: 11, name: "Soldering" },
+                { id: 12, name: "Transformer" }, { id: 18, name: "Winding" }, { id: 19, name: "Basic Electronics" }
+            ],
+            3: [ // Day 7
+                { id: 20, name: "Diode & Rectifier" }, { id: 21, name: "Transistor & Amplifier" },
+                { id: 22, name: "Measuring Instruments" }, { id: 23, name: "Generation" }, { id: 24, name: "Transmission" }
+            ]
+        };
+
+        // --- STATE MANAGEMENT ---
+        let currentDay = parseInt(localStorage.getItem('rvun_day')) || 0;
+        let completedTasks = JSON.parse(localStorage.getItem('rvun_tasks')) || {};
+        let weakTopics = JSON.parse(localStorage.getItem('rvun_weak')) || {};
+
+        function saveData() {
+            localStorage.setItem('rvun_day', currentDay);
+            localStorage.setItem('rvun_tasks', JSON.stringify(completedTasks));
+            localStorage.setItem('rvun_weak', JSON.stringify(weakTopics));
+            render();
+        }
+
+        function toggleTask(key) {
+            completedTasks[key] = !completedTasks[key];
+            saveData();
+        }
+
+        function toggleWeak(id) {
+            weakTopics[id] = !weakTopics[id];
+            saveData();
+        }
+
+        function setDay(index) {
+            currentDay = index;
+            saveData();
+        }
+
+        function resetData() {
+            if(confirm("पूरा डेटा डिलीट हो जायेगा! क्या आप श्योर हैं?")) {
+                localStorage.clear();
+                location.reload();
             }
         }
-    </script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
-
-        // --- Configuration ---
-        const PARTICLE_COUNT = 8000;
-        const PARTICLE_SIZE = 0.15;
-        const LERP_SPEED = 0.08; // How fast particles morph
-
-        // --- State ---
-        let currentShape = 'sphere';
-        let targetExpansion = 1.0;
-        let targetHue = 0.5;
-        let handDetected = false;
-        
-        // --- Three.js Setup ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        // Add subtle fog for depth
-        scene.fog = new THREE.FogExp2(0x000000, 0.02);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.z = 25;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
-
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 1.0;
-
-        // --- Particle System ---
-        // We use BufferGeometry for performance
-        const geometry = new THREE.BufferGeometry();
-        const initialPositions = new Float32Array(PARTICLE_COUNT * 3);
-        const currentPositions = new Float32Array(PARTICLE_COUNT * 3);
-        const targetPositions = new Float32Array(PARTICLE_COUNT * 3);
-        const colors = new Float32Array(PARTICLE_COUNT * 3);
-
-        // Initialize particles randomly first
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            const x = (Math.random() - 0.5) * 50;
-            const y = (Math.random() - 0.5) * 50;
-            const z = (Math.random() - 0.5) * 50;
+        // --- RENDER LOGIC ---
+        function getTheoryChapters(dayIdx) {
+            if (dayIdx < 4) return scheduleBatches[dayIdx];
+            // Revision Logic
+            const b0 = scheduleBatches[0]; const b1 = scheduleBatches[1];
+            const b2 = scheduleBatches[2]; const b3 = scheduleBatches[3];
             
-            initialPositions[i*3] = x;
-            initialPositions[i*3+1] = y;
-            initialPositions[i*3+2] = z;
-
-            currentPositions[i*3] = x;
-            currentPositions[i*3+1] = y;
-            currentPositions[i*3+2] = z;
-
-            targetPositions[i*3] = x;
-            targetPositions[i*3+1] = y;
-            targetPositions[i*3+2] = z;
+            if (dayIdx === 4) return [...b0, ...b1.slice(0, 2)];
+            if (dayIdx === 5) return [...b1.slice(2), ...b2];
+            if (dayIdx === 6) return [...b3, ...b0.slice(0, 2)];
+            return [];
         }
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        function render() {
+            // Render Tabs
+            const tabsContainer = document.getElementById('dayTabs');
+            tabsContainer.innerHTML = '';
+            for(let i=0; i<totalDays; i++) {
+                const isActive = i === currentDay;
+                const date = startDate + i;
+                const btn = document.createElement('button');
+                btn.className = `flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${isActive ? 'bg-yellow-400 text-blue-900 shadow-lg scale-105' : 'bg-blue-700 text-blue-200'}`;
+                btn.innerHTML = `<div>Day ${i+1}</div><div class="text-lg">${date}</div>`;
+                btn.onclick = () => setDay(i);
+                tabsContainer.appendChild(btn);
+            }
 
-        // Shader Material for glowing dots
+            // Render Content
+            const app = document.getElementById('appContent');
+            app.innerHTML = '';
+
+            // Date Header
+            const dateTitle = document.createElement('div');
+            dateTitle.className = "text-center mb-6";
+            const isRevision = currentDay >= 4;
+            dateTitle.innerHTML = `
+                <h2 class="text-gray-500 font-bold uppercase text-xs tracking-wider">Schedule for ${startDate + currentDay}th Month</h2>
+                <div class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-1 ${isRevision ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+                    ${isRevision ? '⚡ Final Revision Phase' : '📚 Syllabus Coverage Phase'}
+                </div>
+            `;
+            app.appendChild(dateTitle);
+
+            // Helper to create sections
+            const createSection = (time, title, sub, color, type, items) => {
+                const section = document.createElement('div');
+                const borderClass = color === 'blue' ? 'border-blue-500 bg-blue-50' : (color === 'orange' ? 'border-orange-500 bg-orange-50' : 'border-green-500 bg-white');
+                section.className = `mb-4 rounded-xl border-l-4 p-4 shadow-sm ${borderClass}`;
+                
+                let itemsHtml = '';
+                
+                if (items) {
+                    items.forEach((item, idx) => {
+                        const taskKey = `${currentDay}-${type}-${item.id}`;
+                        const isDone = completedTasks[taskKey];
+                        const isWeak = weakTopics[item.id];
+                        
+                        itemsHtml += `
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 mb-2 shadow-sm">
+                            <div class="flex items-center gap-3" onclick="toggleTask('${taskKey}')">
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center ${isDone ? 'bg-green-500 border-green-500' : ''}">
+                                    ${isDone ? '<span class="text-white text-sm">✓</span>' : ''}
+                                </div>
+                                <span class="text-sm font-medium ${isDone ? 'line-through text-gray-400' : 'text-gray-800'} cursor-pointer select-none">
+                                    ${item.name}
+                                </span>
+                            </div>
+                            <button onclick="toggleWeak(${item.id})" class="p-1 rounded ${isWeak ? 'weak-active' : 'text-gray-300 hover:text-gray-500'}">
+                                ⚠️
+                            </button>
+                        </div>`;
+                    });
+                } else {
+                    const taskKey = `${currentDay}-${time}-main`;
+                    const isDone = completedTasks[taskKey];
+                    itemsHtml = `
+                    <div class="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm" onclick="toggleTask('${taskKey}')">
+                        <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center ${isDone ? 'bg-orange-500 border-orange-500' : ''}">
+                             ${isDone ? '<span class="text-white text-sm">✓</span>' : ''}
+                        </div>
+                        <span class="font-bold text-gray-700 select-none">Mark Complete</span>
+                    </div>`;
+                }
+
+                section.innerHTML = `
+                    <div class="mb-3">
+                        <div class="flex items-center gap-2 text-gray-700 font-bold text-sm">🕒 ${time}</div>
+                        <h3 class="text-lg font-bold text-gray-900">${title}</h3>
+                        <p class="text-xs text-gray-600">${sub}</p>
+                    </div>
+                    <div>${itemsHtml}</div>
+                `;
+                app.appendChild(section);
+            };
+
+            // 1. Morning Slot
+            createSection('04:00 - 07:00 AM', 'Daily Power Dose', 'ये 5 चैप्टर रोज पढ़ने हैं', 'blue', 'core', coreChapters);
+
+            // 2. GK Slot
+            createSection('09:00 - 02:00 PM', 'Rajasthan GK / Non-Tech', 'इतिहास, कला, संस्कृति, भूगोल', 'orange', 'gk', null);
+
+            // 3. Theory Slot
+            const theoryItems = getTheoryChapters(currentDay);
+            const theoryTitle = isRevision ? "Rapid Revision (Weak Topics)" : "Theory Deep Dive";
+            const theorySub = isRevision ? "लाल निशान (⚠️) वाले टॉपिक्स पर फोकस करें" : "आज के 5 नए चैप्टर";
+            createSection('02:30 - 07:00 PM', theoryTitle, theorySub, 'green', 'theory', theoryItems);
+
+            // 4. Night Slot
+            createSection('08:00 - 10:00 PM', 'GK Revision & Test', 'रिविजन और प्रश्न', 'orange', 'gk_night', null);
+            
+            // Revision Note
+            if(isRevision) {
+                const note = document.createElement('div');
+                note.className = "mt-4 bg-red-50 text-red-700 p-3 rounded text-xs border border-red-200 text-center";
+                note.innerText = "Note: अब सिर्फ उन टॉपिक्स को पढ़ें जहाँ आपने Warning (⚠️) का निशान लगाया है।";
+                app.appendChild(note);
+            }
+        }
+
+        // Initial Render
+        render();
+
+    </script>
+</body>
+</html>
+
+// Shader Material for glowing dots
         const material = new THREE.PointsMaterial({
             size: PARTICLE_SIZE,
             vertexColors: true,
@@ -433,3 +540,4 @@
     </script>
 </body>
 </html>
+
