@@ -8,7 +8,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#09090b">
-    <title>TASKER v8.0</title>
+    <title>TASKER v8.1 Safe</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -164,6 +164,11 @@
                 <button onclick="setMood('good')" id="mood-good" class="mood-btn opacity-50 hover:opacity-100 transition-all">🔥</button>
             </div>
         </div>
+        
+        <!-- Emergency Reset -->
+        <div class="text-center pb-8">
+            <button onclick="hardReset()" class="text-[10px] text-zinc-700 uppercase tracking-widest hover:text-red-500 transition-colors">Reset All Data</button>
+        </div>
     </main>
 
     <!-- VIEW: STATS -->
@@ -245,13 +250,42 @@
             })) 
         };
 
-        let appState = JSON.parse(localStorage.getItem('tasker_v8')) || INITIAL_STATE;
+        let appState;
         
+        // --- ROBUST LOADER (Fixes crash issue) ---
+        try {
+            const stored = localStorage.getItem('tasker_v8');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Check if data is valid
+                if (parsed && Array.isArray(parsed.days) && parsed.days.length > 0) {
+                    appState = parsed;
+                } else {
+                    throw new Error("Data corrupted");
+                }
+            } else {
+                appState = JSON.parse(JSON.stringify(INITIAL_STATE));
+            }
+        } catch (e) {
+            console.warn("Recovering from crash...", e);
+            appState = JSON.parse(JSON.stringify(INITIAL_STATE));
+            localStorage.setItem('tasker_v8', JSON.stringify(appState));
+        }
+
+        // Fix logic: Ensure currentDay is within bounds
+        if (!appState.currentDay || appState.currentDay >= appState.days.length) {
+            appState.currentDay = 0;
+        }
+
         // Migration to fix undefined fields if updating from old version
         appState.days.forEach(d => {
             if(d.sleep === undefined) d.sleep = 0;
             if(d.mood === undefined) d.mood = null;
             if(d.naps === undefined) d.naps = 0;
+            // Restore slots if missing
+            if(!d.slots || d.slots.length === 0) {
+                 d.slots = JSON.parse(JSON.stringify(INITIAL_STATE.days[0].slots));
+            }
         });
 
         let pendingTask = null; // { dayIndex, slotIndex, taskId }
@@ -274,16 +308,19 @@
         };
 
         const triggerConfetti = () => {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#3b82f6', '#ffffff', '#71717a']
-            });
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#3b82f6', '#ffffff', '#71717a']
+                });
+            }
         };
 
         // --- CORE FUNCTIONS ---
         const save = () => { localStorage.setItem('tasker_v8', JSON.stringify(appState)); updateUI(); };
+        const hardReset = () => { if(confirm("Reset everything to Day 1?")) { localStorage.removeItem('tasker_v8'); location.reload(); }};
         
         const toggleTask = (dayIdx, slotIdx, taskId) => { 
             const task = appState.days[dayIdx].slots[slotIdx].tasks.find(y => y.id === taskId); 
@@ -376,30 +413,4 @@
             const end = new Date(); end.setHours(22, 0, 0, 0); // 10 PM
             const start = new Date(); start.setHours(4, 0, 0, 0); // 4 AM
 
-            let diff, statusText, color;
-
-            if (now < start) {
-                diff = start - now; statusText = "STARTS IN"; color = "text-yellow-400";
-            } else if (now > end) {
-                statusText = "REST TIME"; 
-                document.getElementById('mission-timer').innerText = "00:00";
-                document.getElementById('countdown-text').innerText = "MISSION COMPLETED";
-                return;
-            } else {
-                diff = end - now; statusText = "MISSION ENDS IN";
-                color = (diff < 1000*60*60*4) ? "text-red-500 animate-pulse" : "text-white";
-            }
-
-            const h = Math.floor(diff / (1000 * 60 * 60));
-            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            document.getElementById('mission-timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            document.getElementById('mission-timer').className = `text-2xl font-mono font-bold leading-none ${color}`;
-            document.getElementById('countdown-text').innerText = statusText;
-        }, 1000);
-
-        // --- UI RENDERING ---
-        const switchTab = (t) => {
-            document.getElementById('view-tasks').style.display = t==='tasks'?'block':'none';
-            document.getElementById('view-stats').style.display = t==='stats'?'block':'none';
-            document.getElementById('tab-btn-tasks').className = t==='tasks' ? 'flex-1 pb-3 text-xs uppercase font-bold tab-active' : 'flex-1 pb-3 text-xs uppercase font-bold tab-inactive';
-            document.getElementById('tab-btn-stats').className =
+      
