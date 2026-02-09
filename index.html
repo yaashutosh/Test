@@ -1,519 +1,523 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <!-- PWA Settings -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#09090b">
-    <title>TASKER PRO v9.0</title>
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Clock, 
+  Grid, 
+  ChevronRight, 
+  Flag, 
+  RotateCcw, 
+  CheckCircle, 
+  XCircle, 
+  Menu,
+  X,
+  Download,
+  Printer,
+  FileText
+} from 'lucide-react';
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+// --- IBPS STYLE QUESTION DATA (Same 30 Questions) ---
+const questionData = [
+  {
+    id: 1,
+    question: "ट्रांसफार्मर के बारे में निम्नलिखित में से कौन सा कथन 'असत्य' (Incorrect) है?",
+    options: [
+      "यह पारस्परिक प्रेरण (Mutual Induction) के सिद्धांत पर कार्य करता है।",
+      "यह आवृत्ति (Frequency) को बदल देता है।",
+      "यह स्थैतिक (Static) उपकरण है।",
+      "यह ऊर्जा को एक सर्किट से दूसरे सर्किट में स्थानांतरित करता है।",
+      "इसमें घर्षण हानियाँ शून्य होती हैं।"
+    ],
+    correct: 1, 
+    topic: "Chapter 12: Transformer"
+  },
+  {
+    id: 2,
+    question: "एक 4-पोल, 50Hz प्रेरण मोटर 1440 RPM पर चल रही है। प्रतिशत स्लिप (% Slip) की गणना करें:",
+    options: ["2%", "3%", "4%", "5%", "6%"],
+    correct: 2, 
+    topic: "Chapter 17: 3-Phase Motor"
+  },
+  {
+    id: 3,
+    question: "फ्लेमिंग के बाएं हाथ के नियम (Left Hand Rule) के अनुसार, तर्जनी (Forefinger) क्या दर्शाती है?",
+    options: ["चालक की गति की दिशा", "उत्पन्न ईएमएफ (EMF) की दिशा", "चुंबकीय क्षेत्र (Magnetic Field) की दिशा", "धारा (Current) की दिशा", "यांत्रिक बल की दिशा"],
+    correct: 2, 
+    topic: "Chapter 14: DC Motor"
+  },
+  {
+    id: 4,
+    question: "घरेलू वायरिंग में 'अर्थिंग' (Earthing) का प्रतिरोध (Resistance) आदर्श रूप से कितना होना चाहिए?",
+    options: ["शून्य (Zero) के करीब", "100 ओम से अधिक", "1 किलो ओम", "अनंत (Infinite)", "500 ओम"],
+    correct: 0, 
+    topic: "Chapter 8: Earthing"
+  },
+  {
+    id: 5,
+    question: "निम्नलिखित में से कौन सा उपकरण 'एक्टिव कंपोनेंट' (Active Component) है?",
+    options: ["प्रतिरोधक (Resistor)", "संधारित्र (Capacitor)", "प्रेरक (Inductor)", "ट्रांजिस्टर (Transistor)", "ट्रांसफार्मर (Transformer)"],
+    correct: 3, 
+    topic: "Chapter 19: Basic Electronics"
+  },
+  {
+    id: 6,
+    question: "किरचॉफ का वोल्टेज नियम (KVL) किस परिपथ में लागू होता है?",
+    options: ["केवल रैखिक (Linear) परिपथ में", "केवल अरैखिक (Non-linear) परिपथ में", "खुले परिपथ (Open Circuit) में", "बंद लूप (Closed Loop) या मेष में", "केवल निष्क्रिय नेटवर्क में"],
+    correct: 3, 
+    topic: "Chapter 3: DC Theory"
+  },
+  {
+    id: 7,
+    question: "यदि किसी तार की लंबाई दोगुनी कर दी जाए और उसका अनुप्रस्थ काट क्षेत्रफल (Area) आधा कर दिया जाए, तो उसका प्रतिरोध क्या होगा?",
+    options: ["दोगुना हो जाएगा", "चार गुना हो जाएगा", "आधा रह जाएगा", "वही रहेगा", "आठ गुना हो जाएगा"],
+    correct: 1, 
+    topic: "Chapter 2: Resistor"
+  },
+  {
+    id: 8,
+    question: "DC जनरेटर में 'कम्यूटेशन' (Commutation) को सुधारने के लिए प्रयोग किए जाने वाले 'रेसिस्टेंस कम्यूटेशन' विधि में किस प्रकार के ब्रश का उपयोग होता है?",
+    options: ["कॉपर ब्रश", "कार्बन ब्रश", "एल्युमिनियम ब्रश", "धातु-ग्रेफाइट ब्रश", "पीतल ब्रश"],
+    correct: 1, 
+    topic: "Chapter 13: DC Generator"
+  },
+  {
+    id: 9,
+    question: "CRO (कैथोड रे ऑसिलोस्कोप) का उपयोग निम्नलिखित में से क्या मापने के लिए *नहीं* किया जा सकता?",
+    options: ["वोल्टेज (Voltage)", "आवृत्ति (Frequency)", "शक्ति (Power)", "फेज कोण (Phase Angle)", "वेवफॉर्म (Waveform)"],
+    correct: 2, 
+    topic: "Chapter 22: Measuring Instruments"
+  },
+  {
+    id: 10,
+    question: "एक सिलिकॉन डायोड का 'नी वोल्टेज' (Knee Voltage/Barrier Potential) लगभग कितना होता है?",
+    options: ["0.3 V", "0.7 V", "1.1 V", "0.1 V", "5 V"],
+    correct: 1, 
+    topic: "Chapter 20: Diode"
+  },
+  {
+    id: 11,
+    question: "शक्ति गुणांक (Power Factor) को सुधारने के लिए संधारित्र (Capacitor) को लोड के साथ कैसे जोड़ा जाता है?",
+    options: ["श्रेणी (Series) में", "समानांतर (Parallel) में", "स्टार कनेक्शन में", "सीरीज-पैरेलल में", "न्यूट्ल वायर के साथ"],
+    correct: 1, 
+    topic: "Chapter 5: AC Theory"
+  },
+  {
+    id: 12,
+    question: "सोडियम वेपर लैंप (Sodium Vapor Lamp) शुरू में कौन सा रंग देता है और पूर्ण प्रकाशित होने पर कौन सा रंग देता है?",
+    options: ["शुरू में नीला, बाद में सफेद", "शुरू में लाल, बाद में पीला", "शुरू में गुलाबी, बाद में पीला", "शुरू में पीला, बाद में लाल", "शुरू में हरा, बाद में नीला"],
+    correct: 2, 
+    topic: "Chapter 25: Illumination"
+  },
+  {
+    id: 13,
+    question: "भूमिगत केबलों (Underground Cables) में नमी के प्रवेश को रोकने के लिए किस भाग का उपयोग किया जाता है?",
+    options: ["आर्मरिंग (Armouring)", "बेडिंग (Bedding)", "मेटालिक शीथ (Metallic Sheath)", "सर्विंग (Serving)", "इन्सुलेशन"],
+    correct: 2, 
+    topic: "Chapter 9: Underground Cable"
+  },
+  {
+    id: 14,
+    question: "यूनिवर्सल मोटर (Universal Motor) किस सप्लाई पर कार्य कर सकती है?",
+    options: ["केवल AC पर", "केवल DC पर", "AC और DC दोनों पर", "केवल 3-फेज AC पर", "केवल बैटरी पर"],
+    correct: 2, 
+    topic: "Chapter 16: Single Phase Motor"
+  },
+  {
+    id: 15,
+    question: "निम्नलिखित में से कौन सा लॉजिक गेट (Logic Gate) 'यूनिवर्सल गेट' कहलाता है?",
+    options: ["AND", "OR", "NOT", "NAND", "XOR"],
+    correct: 3, 
+    topic: "Chapter 19: Digital Electronics"
+  },
+  {
+    id: 16,
+    question: "ट्रांसमिशन लाइनों में 'स्किन इफेक्ट' (Skin Effect) किस पर निर्भर करता है?",
+    options: ["चालक का व्यास", "आवृत्ति (Frequency)", "चालक के पदार्थ की प्रकृति", "चालक का आकार", "उपरोक्त सभी"],
+    correct: 4, 
+    topic: "Chapter 24: T&D"
+  },
+  {
+    id: 17,
+    question: "विद्युत आग (Electrical Fire) के लिए किस प्रकार के अग्निशामक का प्रयोग 'कदापि नहीं' करना चाहिए?",
+    options: ["कार्बन टेट्राक्लोराइड (CTC)", "झाग (Foam) प्रकार", "CO2", "हैलॉन", "शुष्क पाउडर"],
+    correct: 1, 
+    topic: "Chapter 25: Safety"
+  },
+  {
+    id: 18,
+    question: "दो वाटमीटर विधि में, यदि एक वाटमीटर की रीडिंग ऋणात्मक (Negative) आती है, तो इसका अर्थ है कि पावर फैक्टर:",
+    options: ["0.5 से कम है", "0.5 के बराबर है", "0.5 से अधिक है", "इकाई (Unity) है", "शून्य है"],
+    correct: 0, 
+    topic: "Chapter 5: Polyphase"
+  },
+  {
+    id: 19,
+    question: "लेड-एसिड बैटरी की क्षमता (Capacity) किसमें मापी जाती है?",
+    options: ["वाट (Watt)", "किलोवाट (kW)", "एम्पीयर-घंटा (Ah)", "वोल्ट (Volt)", "एम्पीयर (Ampere)"],
+    correct: 2, 
+    topic: "Chapter 6: Cell & Battery"
+  },
+  {
+    id: 20,
+    question: "MCB (Miniature Circuit Breaker) किस सिद्धांत पर कार्य करता है?",
+    options: ["केवल चुंबकीय प्रभाव", "केवल तापीय प्रभाव", "तापीय और चुंबकीय (Thermal & Magnetic) दोनों", "स्थिर वैद्युत प्रभाव", "रासायनिक प्रभाव"],
+    correct: 2, 
+    topic: "Chapter 25: Protection"
+  },
+  {
+    id: 21,
+    question: "एक साइन वेव (Sine Wave) का शिखर मान (Peak Value) 200V है। इसका RMS मान क्या होगा?",
+    options: ["141.4 V", "100 V", "282.8 V", "200 V", "127.4 V"],
+    correct: 0, 
+    topic: "Chapter 5: AC Theory"
+  },
+  {
+    id: 22,
+    question: "ट्रांसफार्मर में 'बखोल्ज रिले' (Buchholz Relay) का प्रयोग किसके लिए किया जाता है?",
+    options: ["बाहरी दोषों से सुरक्षा", "शीतलन (Cooling) नियंत्रण", "आंतरिक दोषों (Internal Faults) से सुरक्षा", "वोल्टेज नियमन", "लाइटनिंग सुरक्षा"],
+    correct: 2, 
+    topic: "Chapter 12: Transformer"
+  },
+  {
+    id: 23,
+    question: "DC मोटर की गति (N) और बैक ईएमएफ (Eb) के बीच क्या संबंध है?",
+    options: ["N ∝ 1/Eb", "N ∝ Eb", "N ∝ Eb²", "N ∝ √Eb", "कोई संबंध नहीं"],
+    correct: 1, 
+    topic: "Chapter 14: DC Motor"
+  },
+  {
+    id: 24,
+    question: "मेगर (Megger) का उपयोग क्या मापने के लिए किया जाता है?",
+    options: ["निम्न प्रतिरोध", "मध्यम प्रतिरोध", "उच्च इन्सुलेशन प्रतिरोध", "धारा", "वोल्टेज"],
+    correct: 2, 
+    topic: "Chapter 22: Instruments"
+  },
+  {
+    id: 25,
+    question: "भारतीय विद्युत नियमों (IE Rules) के अनुसार, लो-वोल्टेज आपूर्ति में घोषित वोल्टेज से अधिकतम कितना परिवर्तन अनुमन्य (Permissible) है?",
+    options: ["±1%", "±3%", "±5%", "±10%", "±12.5%"],
+    correct: 2, 
+    topic: "Chapter 24: Rules"
+  },
+  {
+    id: 26,
+    question: "3-फेज डेल्टा कनेक्शन में, लाइन करंट (IL) और फेज करंट (Iph) में क्या संबंध है?",
+    options: ["IL = Iph", "IL = √3 × Iph", "IL = Iph / √3", "IL = 3 × Iph", "IL = Iph / 2"],
+    correct: 1, 
+    topic: "Chapter 5: Polyphase"
+  },
+  {
+    id: 27,
+    question: "कंड्यूट पाइप वायरिंग (Conduit Wiring) में 'एल्बो' (Elbow) का प्रयोग कहाँ किया जाता है?",
+    options: ["तारों को जोड़ने के लिए", "पाइप की लंबाई बढ़ाने के लिए", "90 डिग्री के मोड़ (Turn) पर", "दीवार पर पाइप कसने के लिए", "तारों को बाहर निकालने के लिए"],
+    correct: 2, 
+    topic: "Chapter 10: Wiring Accessories"
+  },
+  {
+    id: 28,
+    question: "सोल्डरिंग आयरन की बिट (Bit) किस धातु की बनी होती है?",
+    options: ["लोहा", "स्टील", "पीतल", "तांबा (Copper)", "एल्युमिनियम"],
+    correct: 3, 
+    topic: "Chapter 11: Soldering"
+  },
+  {
+    id: 29,
+    question: "अल्टरनेटर के रोटर को DC सप्लाई देने के लिए किस जनरेटर का उपयोग एक्साइटर (Exciter) के रूप में किया जाता है?",
+    options: ["DC सीरीज जनरेटर", "DC शंट जनरेटर", "DC कंपाउंड जनरेटर", "AC जनरेटर", "इंडक्शन जनरेटर"],
+    correct: 1, 
+    topic: "Chapter 15: Alternator"
+  },
+  {
+    id: 30,
+    question: "किसी परमाणु के नाभिक (Nucleus) में क्या होते हैं?",
+    options: ["केवल प्रोटॉन", "केवल न्यूट्रॉन", "प्रोटॉन और न्यूट्रॉन", "इलेक्ट्रॉन और प्रोटॉन", "इलेक्ट्रॉन और न्यूट्रॉन"],
+    correct: 2, 
+    topic: "Chapter 1: Basic Electricity"
+  }
+];
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@700&display=swap');
-        
-        :root { --bg: #09090b; --card: #18181b; }
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg); 
-            color: #e4e4e7;
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none;
-        }
+export default function IBPSWithPDF() {
+  const [examStatus, setExamStatus] = useState('instructions'); 
+  const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [responses, setResponses] = useState({}); 
+  const [timeLeft, setTimeLeft] = useState(30 * 60); 
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  
+  // Timer Logic
+  useEffect(() => {
+    let timer;
+    if (examStatus === 'exam' && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && examStatus === 'exam') {
+      handleSubmit();
+    }
+    return () => clearInterval(timer);
+  }, [examStatus, timeLeft]);
 
-        .anim-entry { animation: fadeSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform: translateZ(0); opacity: 0; }
-        @keyframes fadeSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  // Handle PDF Print
+  const handlePrint = () => {
+    window.print();
+  };
 
-        .glass-panel {
-            background: rgba(24, 24, 27, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+  const handleAnswer = (optionIdx) => {
+    setResponses({
+      ...responses,
+      [currentQIndex]: {
+        ...responses[currentQIndex],
+        answer: optionIdx,
+        status: 'answered'
+      }
+    });
+  };
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .brand-font { font-family: 'Space Grotesk', sans-serif; }
-        .mono-font { font-family: 'JetBrains Mono', monospace; }
-        
-        .tab-active { color: white; border-bottom: 2px solid #3b82f6; }
-        .tab-inactive { color: #71717a; }
-        .safe-top { padding-top: env(safe-area-inset-top); }
+  const handleMarkForReview = () => {
+    setResponses(prev => ({
+      ...prev,
+      [currentQIndex]: { ...prev[currentQIndex], status: 'marked' }
+    }));
+    if (currentQIndex < questionData.length - 1) setCurrentQIndex(prev => prev + 1);
+  };
 
-        /* Custom Inputs */
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(59,130,246,0.5); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #27272a; border-radius: 2px; }
+  const handleClearResponse = () => {
+    const newResponses = { ...responses };
+    delete newResponses[currentQIndex];
+    setResponses(newResponses);
+  };
 
-        .mood-btn.selected { transform: scale(1.2); filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
-        
-        .custom-checkbox {
-            appearance: none; width: 20px; height: 20px; border: 2px solid #3f3f46; border-radius: 6px; display: grid; place-content: center; cursor: pointer; transition: all 0.2s;
-        }
-        .custom-checkbox:checked { background-color: #3b82f6; border-color: #3b82f6; }
-        .custom-checkbox:checked::before {
-            content: ""; width: 10px; height: 10px; box-shadow: inset 1em 1em white; transform-origin: bottom left; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-        }
-        
-        /* Danger Zone Pulse */
-        .danger-pulse { animation: dangerGlow 2s infinite; }
-        @keyframes dangerGlow { 0% { box-shadow: 0 0 5px #ef4444; } 50% { box-shadow: 0 0 20px #ef4444; } 100% { box-shadow: 0 0 5px #ef4444; } }
-    </style>
-</head>
-<body class="pb-32 safe-top">
+  const handleSaveAndNext = () => {
+    if (!responses[currentQIndex]?.answer && responses[currentQIndex]?.status !== 'marked') {
+      setResponses(prev => ({ ...prev, [currentQIndex]: { status: 'visited' }}));
+    }
+    if (currentQIndex < questionData.length - 1) setCurrentQIndex(prev => prev + 1);
+  };
 
-    <!-- Header with Countdown -->
-    <header class="fixed top-0 w-full z-40 glass-panel pt-safe-top shadow-lg shadow-black/50">
-        <div class="max-w-md mx-auto px-4 pt-3 pb-0">
-            <div class="flex justify-between items-center mb-3">
-                <div>
-                    <h1 class="text-xl font-bold brand-font tracking-tight text-white">TASKER<span class="text-blue-500">.</span></h1>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span id="status-dot" class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        <p class="text-[10px] text-zinc-400 font-mono tracking-widest uppercase" id="countdown-text">SYNCING...</p>
-                    </div>
-                </div>
-                <!-- Time Left Gauge -->
-                <div class="text-right">
-                    <div class="text-[10px] text-zinc-500 uppercase font-bold">Study Time Left</div>
-                    <div class="text-2xl font-mono font-bold text-white leading-none" id="mission-timer">--:--</div>
-                </div>
-            </div>
-            <!-- Tabs -->
-            <div class="flex border-b border-zinc-800">
-                <button onclick="switchTab('tasks')" id="tab-btn-tasks" class="flex-1 pb-3 text-xs uppercase tracking-wider font-bold transition-colors tab-active">Tracker</button>
-                <button onclick="switchTab('stats')" id="tab-btn-stats" class="flex-1 pb-3 text-xs uppercase tracking-wider font-bold transition-colors tab-inactive">Deep Analysis</button>
-            </div>
+  const handleNavigate = (index) => {
+    if (!responses[currentQIndex]) {
+       setResponses(prev => ({ ...prev, [currentQIndex]: { status: 'visited' }}));
+    }
+    setCurrentQIndex(index);
+    setIsMenuOpen(false);
+  };
+
+  const handleSubmit = () => {
+    setExamStatus('result');
+  };
+
+  const getOptionLabel = (idx) => String.fromCharCode(65 + idx);
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  // --- INSTRUCTIONS ---
+  if (examStatus === 'instructions') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans select-none print:hidden">
+        <div className="bg-white max-w-2xl w-full rounded-lg shadow-xl border border-gray-300 overflow-hidden">
+          <div className="bg-blue-700 p-4 text-white flex justify-between items-center">
+            <h1 className="text-xl font-bold">JVVNL/IBPS Technical Exam</h1>
+            <div className="text-xs bg-blue-800 px-2 py-1 rounded">System No: C001</div>
+          </div>
+          <div className="p-8 h-[60vh] overflow-y-auto">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 underline">Instructions:</h2>
+            <ul className="list-disc space-y-3 pl-5 text-sm text-gray-700">
+              <li>कुल प्रश्न: 30 | समय: 30 मिनट।</li>
+              <li>नेगेटिव मार्किंग: 0.25 अंक।</li>
+              <li>पेपर खत्म होने के बाद आप <strong>PDF Download</strong> कर सकते हैं।</li>
+              <li>प्रश्न पैलेट दाईं ओर है।</li>
+            </ul>
+          </div>
+          <div className="p-4 border-t bg-gray-100 flex justify-end">
+            <button onClick={() => setExamStatus('exam')} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded shadow font-bold">
+              Start Exam
+            </button>
+          </div>
         </div>
-    </header>
+      </div>
+    );
+  }
 
-    <div class="h-32"></div>
+  // --- RESULT & PDF VIEW ---
+  if (examStatus === 'result') {
+    let correct = 0, wrong = 0, attempted = 0;
+    questionData.forEach((q, idx) => {
+      const resp = responses[idx];
+      if (resp && resp.answer !== undefined) {
+        attempted++;
+        if (resp.answer === q.correct) correct++; else wrong++;
+      }
+    });
+    const score = (correct * 1) - (wrong * 0.25);
 
-    <!-- VIEW: TASKS -->
-    <main id="view-tasks" class="max-w-md mx-auto px-4 space-y-5 block">
-        
-        <!-- Day Selector -->
-        <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1" id="dayTabs"></div>
+    return (
+      <div className="min-h-screen bg-gray-100 p-4 font-sans">
+        <style>{`
+          @media print {
+            @page { margin: 1cm; size: A4; }
+            body { background: white; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .page-break { page-break-inside: avoid; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+            .correct-ans { color: #166534 !important; font-weight: bold; }
+            .wrong-ans { color: #991b1b !important; }
+            .user-selection { text-decoration: underline; }
+          }
+        `}</style>
 
-        <!-- 🛌 Sleep Input -->
-        <div class="glass-panel rounded-xl p-4 border-l-4 border-l-purple-500 anim-entry">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Sleep (Hrs)</span>
-                <span class="text-purple-400 font-mono font-bold" id="sleep-display">0 hrs</span>
+        {/* --- DASHBOARD (Hidden on Print) --- */}
+        <div className="max-w-4xl mx-auto mb-8 no-print">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+            <div className="bg-gray-800 text-white p-6 text-center">
+              <h2 className="text-3xl font-bold">{score.toFixed(2)} / 30</h2>
+              <p className="text-gray-400">Final Score</p>
             </div>
-            <input type="range" min="0" max="12" step="0.5" id="sleep-slider" oninput="updateSleepDisplay(this.value)" onchange="saveSleep(this.value)">
-            <p class="text-[10px] text-zinc-500 mt-2 text-right" id="sleep-comment">Track honestly.</p>
+            <div className="grid grid-cols-3 divide-x border-b">
+              <div className="p-4 text-center"><div className="text-2xl font-bold text-green-600">{correct}</div><div className="text-xs uppercase text-gray-500">Correct</div></div>
+              <div className="p-4 text-center"><div className="text-2xl font-bold text-red-600">{wrong}</div><div className="text-xs uppercase text-gray-500">Wrong</div></div>
+              <div className="p-4 text-center"><div className="text-2xl font-bold text-gray-600">{30 - attempted}</div><div className="text-xs uppercase text-gray-500">Skipped</div></div>
+            </div>
+            <div className="p-6 flex justify-center gap-4">
+              <button onClick={handlePrint} className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 shadow-md font-bold transition-transform transform active:scale-95">
+                <Download size={20}/> Download PDF / Print
+              </button>
+              <button onClick={() => window.location.reload()} className="flex items-center gap-2 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-bold transition-transform transform active:scale-95">
+                <RotateCcw size={20}/> New Test
+              </button>
+            </div>
+          </div>
+          <div className="text-center text-gray-500 text-sm mb-4">Scroll down to see solutions or click "Download PDF"</div>
         </div>
 
-        <!-- Daily Progress -->
-        <div class="glass-panel rounded-xl p-4 flex items-center justify-between">
+        {/* --- SOLUTION LIST (Visible on Screen & Print) --- */}
+        <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 print:shadow-none print:p-0">
+          <div className="border-b pb-4 mb-6 flex justify-between items-end">
             <div>
-                <div class="text-xs text-zinc-500 uppercase font-bold tracking-wider">Daily Goals</div>
-                <div class="text-xl font-bold text-white" id="mini-progress-text">0%</div>
+              <h1 className="text-2xl font-bold text-gray-800">JVVNL Technical Exam - Solutions</h1>
+              <p className="text-sm text-gray-500">Date: {new Date().toLocaleDateString()}</p>
             </div>
-            <div class="w-24 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                <div id="mini-progress-bar" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
+            <div className="text-right hidden print:block">
+              <p className="font-bold">Score: {score.toFixed(2)}/30</p>
+              <p className="text-xs">Correct: {correct} | Wrong: {wrong}</p>
             </div>
-        </div>
+          </div>
 
-        <!-- Task Slots -->
-        <div id="slots-container" class="space-y-4"></div>
+          <div className="space-y-6">
+            {questionData.map((q, index) => {
+              const userResp = responses[index];
+              const userAns = userResp?.answer;
+              const isCorrect = userAns === q.correct;
+              const isSkipped = userAns === undefined;
 
-        <!-- ⚡ Power Nap -->
-        <div class="glass-panel rounded-xl p-4 border border-zinc-800 mt-4 anim-entry">
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Power Naps</h3>
-                <span class="text-[10px] text-red-400" id="nap-warning"></span>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="addNap(15)" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-3 rounded-lg text-xs font-bold border border-zinc-700 transition-colors">+15 Min</button>
-                <button onclick="addNap(30)" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-3 rounded-lg text-xs font-bold border border-zinc-700 transition-colors">+30 Min</button>
-                <button onclick="resetNaps()" class="w-12 bg-red-900/20 text-red-400 rounded-lg border border-red-900/50">↺</button>
-            </div>
-            <div class="mt-2 text-[10px] text-zinc-500 text-center" id="nap-total-display">Total: 0 min</div>
-        </div>
+              return (
+                <div key={index} className="page-break">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-bold text-gray-700">Q.{index + 1}</span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded no-print
+                      ${isCorrect ? 'bg-green-100 text-green-700' : isSkipped ? 'bg-gray-100 text-gray-600' : 'bg-red-100 text-red-700'}`}>
+                      {isCorrect ? 'Correct' : isSkipped ? 'Skipped' : 'Wrong'}
+                    </span>
+                  </div>
+                  
+                  <p className="text-gray-900 font-medium mb-3 text-lg">{q.question}</p>
 
-        <!-- 🧠 Mood -->
-        <div class="glass-panel rounded-xl p-4 text-center mt-4 mb-8 anim-entry">
-            <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Day Review</h3>
-            <div class="flex justify-center gap-8 text-3xl">
-                <button onclick="setMood('bad')" id="mood-bad" class="mood-btn opacity-50">😫</button>
-                <button onclick="setMood('avg')" id="mood-avg" class="mood-btn opacity-50">😐</button>
-                <button onclick="setMood('good')" id="mood-good" class="mood-btn opacity-50">🔥</button>
-            </div>
-        </div>
-        
-        <div class="text-center pb-8">
-            <button onclick="hardReset()" class="text-[10px] text-zinc-800 uppercase tracking-widest hover:text-red-500">Reset System</button>
-        </div>
-    </main>
+                  <div className="grid gap-2">
+                    {q.options.map((opt, optIdx) => {
+                      const isOptCorrect = optIdx === q.correct;
+                      const isOptSelected = optIdx === userAns;
+                      
+                      let printClass = "p-2 rounded border text-sm flex justify-between items-center ";
+                      
+                      // Screen Styles
+                      if (isOptCorrect) printClass += "bg-green-50 border-green-300 text-green-900 correct-ans ";
+                      else if (isOptSelected && !isCorrect) printClass += "bg-red-50 border-red-300 text-red-900 wrong-ans ";
+                      else printClass += "bg-white border-gray-200 text-gray-600 ";
 
-    <!-- VIEW: STATS -->
-    <main id="view-stats" class="max-w-md mx-auto px-4 space-y-6 hidden anim-entry">
-        <!-- Main Score -->
-        <div class="glass-panel rounded-2xl p-6 text-center shadow-2xl border-blue-500/20 border">
-            <div class="text-xs text-blue-400 font-bold uppercase tracking-widest mb-2">Overall Efficiency</div>
-            <div class="text-5xl font-bold text-white mb-1 brand-font" id="stats-score">0%</div>
-            <p class="text-xs text-zinc-500 mt-2" id="stats-msg">Calculating data...</p>
-        </div>
-
-        <!-- Bio Rhythm Chart -->
-        <div class="glass-panel rounded-2xl p-4">
-            <h3 class="text-xs font-bold text-zinc-400 mb-2 ml-1">SLEEP VS PRODUCTIVITY</h3>
-            <canvas id="bioChart" height="220"></canvas>
-            <div class="mt-2 text-[10px] text-zinc-600 text-center">
-                Bar = Sleep/Naps (Lower is better) | Line = Tasks Done
-            </div>
-        </div>
-
-        <!-- Trend Chart -->
-        <div class="glass-panel rounded-2xl p-4">
-            <h3 class="text-xs font-bold text-zinc-400 mb-2 ml-1">CONSISTENCY TREND</h3>
-            <canvas id="performanceChart" height="180"></canvas>
-        </div>
-
-        <!-- Summary -->
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-                <div class="text-zinc-500 text-xs mb-1">Total Naps</div>
-                <div class="text-xl font-bold text-red-400" id="stat-naps">0m</div>
-            </div>
-            <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-                <div class="text-zinc-500 text-xs mb-1">Tasks Crushed</div>
-                <div class="text-xl font-bold text-emerald-400" id="stat-done">0</div>
-            </div>
-        </div>
-    </main>
-
-    <!-- SCHEDULING MODAL -->
-    <div id="schedule-modal" class="fixed inset-0 z-[60] hidden flex flex-col justify-end sm:justify-center bg-black/80 backdrop-blur-sm">
-        <div class="w-full sm:max-w-md mx-auto glass-panel p-6 rounded-t-2xl sm:rounded-2xl shadow-2xl border-t border-blue-500/50 anim-entry">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-white">Reschedule Task</h3>
-                <button onclick="closeModal()" class="text-zinc-400 bg-zinc-800 p-2 rounded-full">✕</button>
-            </div>
-            <div class="space-y-4 mb-6">
-                <select id="modal-day-select" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white outline-none"></select>
-                <select id="modal-slot-select" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white outline-none">
-                    <option value="0">Morning Grind (04-07 AM)</option>
-                    <option value="1">GK & Strategy (09-02 PM)</option>
-                    <option value="2">Deep Theory (02:30-07 PM)</option>
-                    <option value="3">Night Review (08-10 PM)</option>
-                </select>
-            </div>
-            <button onclick="confirmSchedule()" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl">Confirm Move</button>
-        </div>
-    </div>
-
-    <script>
-        // --- CONSTANTS ---
-        const CORE_TASKS = ["DC Generator", "DC Motor", "Alternator", "1-Phase Motor", "3-Phase Induction"];
-        
-        // --- REAL-TIME SCHEDULE CONFIG ---
-        // Format: start hour, start min, end hour, end min
-        const SCHEDULE_SLOTS = [
-            { sH: 4, sM: 0, eH: 7, eM: 0 },    // 04:00 - 07:00 (3h)
-            { sH: 9, sM: 0, eH: 14, eM: 0 },   // 09:00 - 14:00 (5h)
-            { sH: 14, sM: 30, eH: 19, eM: 0 }, // 14:30 - 19:00 (4.5h)
-            { sH: 20, sM: 0, eH: 22, eM: 0 }   // 20:00 - 22:00 (2h)
-        ];
-
-        // --- DATA & STATE ---
-        const INITIAL_STATE = { 
-            currentDay: 0, 
-            days: Array.from({ length: 7 }, (_, i) => ({ 
-                id: i, 
-                date: 4 + i, 
-                sleep: 0, 
-                mood: null, 
-                naps: 0,
-                slots: [ 
-                    { id: 's1', title: 'Morning Grind (04-07 AM)', tasks: CORE_TASKS.map(t => ({id: Date.now()+Math.random(), text: t, done: false})) }, 
-                    { id: 's2', title: 'GK & Strategy (09-02 PM)', tasks: [] }, 
-                    { id: 's3', title: 'Deep Theory (02:30-07 PM)', tasks: [] }, 
-                    { id: 's4', title: 'Night Review (08-10 PM)', tasks: [] } 
-                ] 
-            })) 
-        };
-
-        let appState;
-        let chart1 = null;
-        let chart2 = null;
-
-        // --- SAFE LOAD ---
-        try {
-            const stored = localStorage.getItem('tasker_pro_v9');
-            if (stored) {
-                appState = JSON.parse(stored);
-                if(!appState.days || appState.days.length !== 7) throw new Error("Invalid Data");
-            } else {
-                appState = JSON.parse(JSON.stringify(INITIAL_STATE));
-            }
-        } catch (e) {
-            console.log("Resetting data structure...");
-            appState = JSON.parse(JSON.stringify(INITIAL_STATE));
-        }
-
-        // --- AUDIO ---
-        const playSound = (type) => {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); const now = audioCtx.currentTime;
-            
-            if (type === 'click') { 
-                osc.frequency.setValueAtTime(800, now); gain.gain.setValueAtTime(0.05, now); osc.start(); osc.stop(now + 0.05); 
-            } else if (type === 'done') { 
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now + 0.1); 
-                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4); osc.start(); osc.stop(now + 0.4); 
-                confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 }, colors: ['#3b82f6', '#10b981'] });
-            }
-            osc.connect(gain); gain.connect(audioCtx.destination);
-        };
-
-        // --- LOGIC ---
-        const save = () => { localStorage.setItem('tasker_pro_v9', JSON.stringify(appState)); updateUI(); };
-        const hardReset = () => { if(confirm("DELETE ALL DATA? This cannot be undone.")) { localStorage.removeItem('tasker_pro_v9'); location.reload(); }};
-        
-        const toggleTask = (d, s, t) => { const tasks = appState.days[d].slots[s].tasks; const task = tasks.find(x => x.id === t); if(task){ task.done = !task.done; playSound(task.done?'done':'click'); save(); }};
-        const deleteTask = (d, s, t, e) => { e.stopPropagation(); if(confirm("Remove task?")) { appState.days[d].slots[s].tasks = appState.days[d].slots[s].tasks.filter(x => x.id !== t); save(); }};
-        const addTask = (d, s, iId) => { const el = document.getElementById(iId); const val = el.value.trim(); if(val) { appState.days[d].slots[s].tasks.push({id: Date.now(), text: val, done: false}); el.value = ''; playSound('click'); save(); }};
-
-        const updateSleepDisplay = (v) => { 
-            document.getElementById('sleep-display').innerText = v + " hrs"; 
-            document.getElementById('sleep-comment').innerText = v > 8 ? "Too much sleep = wasted time!" : v < 5 ? "Dangerous. Sleep more." : "Optimal range.";
-            document.getElementById('sleep-comment').className = v > 8 ? "text-[10px] mt-2 text-right text-red-400 font-bold" : "text-[10px] mt-2 text-right text-zinc-500";
-        };
-        const saveSleep = (v) => { appState.days[appState.currentDay].sleep = parseFloat(v); save(); };
-        
-        const addNap = (m) => { appState.days[appState.currentDay].naps += m; playSound('click'); save(); };
-        const resetNaps = () => { appState.days[appState.currentDay].naps = 0; playSound('click'); save(); };
-        const setMood = (m) => { appState.days[appState.currentDay].mood = m; playSound('click'); save(); };
-
-        const openReschedule = (d, s, t, e) => {
-            e.stopPropagation(); pendingTask = {d, s, t};
-            const ds = document.getElementById('modal-day-select');
-            ds.innerHTML = appState.days.map((day, i) => `<option value="${i}">Day ${day.date}</option>`).join('');
-            ds.value = d;
-            document.getElementById('schedule-modal').classList.remove('hidden');
-            document.getElementById('schedule-modal').classList.add('flex');
-        };
-        const closeModal = () => { document.getElementById('schedule-modal').classList.add('hidden'); document.getElementById('schedule-modal').classList.remove('flex'); };
-        const confirmSchedule = () => {
-            if(!pendingTask) return;
-            const tD = document.getElementById('modal-day-select').value; const tS = document.getElementById('modal-slot-select').value;
-            const srcTasks = appState.days[pendingTask.d].slots[pendingTask.s].tasks;
-            const tIdx = srcTasks.findIndex(x => x.id === pendingTask.t);
-            if(tIdx > -1) {
-                const [moved] = srcTasks.splice(tIdx, 1);
-                appState.days[tD].slots[tS].tasks.push(moved);
-                playSound('click'); save(); closeModal();
-            }
-        };
-
-                // --- REAL-TIME LOGIC (The Brain) ---
-        const updateTimer = () => {
-            const now = new Date();
-            const currentMins = now.getHours() * 60 + now.getMinutes();
-            const currentSecs = now.getSeconds();
-            
-            let totalRemainingMins = 0;
-            let status = "REST TIME";
-            let color = "text-zinc-500";
-            let dotColor = "bg-zinc-500";
-            let activeSlotEnd = null;
-
-            // Calculate remaining study time for the day
-            SCHEDULE_SLOTS.forEach(slot => {
-                const sTime = slot.sH * 60 + slot.sM;
-                const eTime = slot.eH * 60 + slot.eM;
-                
-                if (currentMins < sTime) {
-                    // Slot is in future
-                    totalRemainingMins += (eTime - sTime);
-                } else if (currentMins >= sTime && currentMins < eTime) {
-                    // Currently INSIDE this slot
-                    totalRemainingMins += (eTime - currentMins);
-                    status = "STUDY MODE ON";
-                    color = "text-white";
-                    dotColor = "bg-red-500 animate-ping";
-                    activeSlotEnd = eTime;
-                }
-                // If currentMins > eTime, slot is passed, add 0
-            });
-
-            // Specific logic for before 4AM
-            if (now.getHours() < 4) {
-                status = "SLEEP / PREP";
-                color = "text-purple-400";
-                dotColor = "bg-purple-500";
-                // Show full 14.5 hours
-                totalRemainingMins = (3+5+4.5+2) * 60;
-            } 
-            // Logic for End of Day (> 10 PM)
-            else if (now.getHours() >= 22) {
-                status = "DAY ENDED";
-                color = "text-zinc-600";
-                totalRemainingMins = 0;
-            }
-            // Logic for Breaks (Between slots)
-            else if (status === "REST TIME") {
-                color = "text-yellow-500";
-                status = "BREAK TIME";
-                dotColor = "bg-yellow-500";
-            }
-
-            const h = Math.floor(totalRemainingMins / 60);
-            const m = Math.floor(totalRemainingMins % 60);
-            // Sync seconds visually
-            const s = 59 - currentSecs; 
-
-            document.getElementById('mission-timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            document.getElementById('mission-timer').className = `text-2xl font-mono font-bold leading-none ${color}`;
-            document.getElementById('countdown-text').innerText = status;
-            
-            // Dot color update
-            const dotHTML = status.includes("STUDY") 
-                ? `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>`
-                : `<span class="relative inline-flex rounded-full h-2 w-2 ${dotColor}"></span>`;
-            document.getElementById('status-dot').innerHTML = dotHTML;
-        };
-        setInterval(updateTimer, 1000);
-
-        // --- UI & CHARTS ---
-        const switchTab = (t) => {
-            document.getElementById('view-tasks').style.display = t==='tasks'?'block':'none';
-            document.getElementById('view-stats').style.display = t==='stats'?'block':'none';
-            document.getElementById('tab-btn-tasks').className = `flex-1 pb-3 text-xs uppercase tracking-wider font-bold transition-colors ${t==='tasks'?'tab-active':'tab-inactive'}`;
-            document.getElementById('tab-btn-stats').className = `flex-1 pb-3 text-xs uppercase tracking-wider font-bold transition-colors ${t==='stats'?'tab-active':'tab-inactive'}`;
-            if(t==='stats') renderCharts();
-        };
-
-        const renderCharts = () => {
-            const labels = appState.days.map(d => `D${d.date}`);
-            const effData = appState.days.map(d => {
-                const all = d.slots.flatMap(s=>s.tasks).length;
-                const done = d.slots.flatMap(s=>s.tasks).filter(t=>t.done).length;
-                return all ? (done/all)*100 : 0;
-            });
-            const sleepData = appState.days.map(d => (d.sleep + (d.naps/60)));
-
-            // Overall Score
-            const totalTasks = appState.days.flatMap(d=>d.slots.flatMap(s=>s.tasks)).length;
-            const totalDone = appState.days.flatMap(d=>d.slots.flatMap(s=>s.tasks)).filter(t=>t.done).length;
-            const globalEff = totalTasks ? Math.round((totalDone/totalTasks)*100) : 0;
-            document.getElementById('stats-score').innerText = globalEff + "%";
-            document.getElementById('stats-score').className = `text-5xl font-bold mb-1 brand-font ${globalEff<50?'text-red-500':globalEff<80?'text-blue-400':'text-emerald-400'}`;
-            
-            // Bio Chart (Mixed)
-            if(chart1) chart1.destroy();
-            chart1 = new Chart(document.getElementById('bioChart'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Sleep+Naps (hrs)', data: sleepData, backgroundColor: 'rgba(168, 85, 247, 0.5)', borderRadius: 4, order: 2 },
-                        { label: 'Efficiency %', data: effData, type: 'line', borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, order: 1 }
-                    ]
-                },
-                options: { responsive: true, scales: { y: { beginAtZero: true, grid: {color: '#27272a'} }, x: { grid: {display: false} } }, plugins: { legend: {display: false} } }
-            });
-
-            // Trend Chart
-            if(chart2) chart2.destroy();
-            chart2 = new Chart(document.getElementById('performanceChart'), {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{ label: 'Performance', data: effData, borderColor: globalEff > 70 ? '#10b981' : '#ef4444', backgroundColor: 'rgba(255,255,255,0.05)', fill: true, tension: 0.4 }]
-                },
-                options: { responsive: true, scales: { y: { display: false }, x: { display: false } }, plugins: { legend: {display: false} } }
-            });
-
-            document.getElementById('stat-naps').innerText = appState.days.reduce((a,b) => a + (b.naps||0), 0) + "m";
-            document.getElementById('stat-done').innerText = totalDone;
-        };
-
-        const updateUI = () => {
-            const curD = appState.days[appState.currentDay];
-            
-            // 1. Day Tabs (Color Logic Here)
-            document.getElementById('dayTabs').innerHTML = appState.days.map((d, i) => {
-                const ts = d.slots.flatMap(s=>s.tasks); const dn = ts.filter(t=>t.done).length; const p = ts.length ? (dn/ts.length)*100 : 0;
-                
-                // Color Logic: Days 8,9,10 (Index 4,5,6) are Red
-                const isDangerZone = i >= 4; // Because Day 8 is at index 4 (0=Day4, 1=Day5, 2=Day6, 3=Day7, 4=Day8)
-                const baseColor = isDangerZone ? 'bg-red-900/40 border-red-800 text-red-400' : 'bg-zinc-800 text-zinc-500 border-zinc-700';
-                const activeColor = i===appState.currentDay 
-                    ? (isDangerZone ? 'bg-red-600 text-white shadow-lg shadow-red-900/50 scale-105' : 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-105')
-                    : `border ${baseColor}`;
-
-                return `<button onclick="appState.currentDay=${i};save()" class="flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center transition-all ${activeColor}">
-                    <span class="text-[9px] font-bold uppercase">Day</span><span class="text-lg font-bold brand-font">${d.date}</span>
-                    <div class="w-8 h-1 bg-black/20 mt-1 rounded-full overflow-hidden"><div class="h-full bg-white/80" style="width: ${p}%"></div></div>
-                </button>`;
-            }).join('');
-
-            // 2. Sleep & Naps
-            document.getElementById('sleep-slider').value = curD.sleep;
-            updateSleepDisplay(curD.sleep);
-            document.getElementById('nap-total-display').innerText = `Total: ${curD.naps} min`;
-            document.getElementById('nap-warning').innerText = curD.naps > 45 ? "⚠️ Overdose" : "";
-
-            // 3. Mood
-            ['bad','avg','good'].forEach(m => {
-                const btn = document.getElementById(`mood-${m}`);
-                btn.classList.remove('selected', 'opacity-100', 'grayscale-0');
-                if(curD.mood === m) {
-                    btn.classList.add('selected', 'opacity-100');
-                } else {
-                    btn.classList.add('opacity-50');
-                }
-            });
-
-            // 4. Progress
-            const dTasks = curD.slots.flatMap(s=>s.tasks); const dDone = dTasks.filter(t=>t.done).length; const dPct = dTasks.length ? Math.round((dDone/dTasks.length)*100) : 0;
-            document.getElementById('mini-progress-text').innerText = `${dPct}%`;
-            document.getElementById('mini-progress-bar').style.width = `${dPct}%`;
-
-            // 5. Tasks
-            document.getElementById('slots-container').innerHTML = curD.slots.map((slot, sIdx) => {
-                const iId = `in-${appState.currentDay}-${sIdx}`;
-                return `
-                <div class="anim-entry glass-panel rounded-xl overflow-hidden" style="animation-delay: ${sIdx * 0.05}s">
-                    <div class="bg-zinc-800/50 px-4 py-2 border-b border-zinc-700/50 flex justify-between items-center">
-                        <h3 class="font-bold text-xs uppercase tracking-wider ${sIdx===3?'text-purple-400':'text-blue-400'}">${slot.title}</h3>
-                        <span class="text-[10px] bg-zinc-800 text-zinc-400 px-2 rounded">${slot.tasks.filter(t=>t.done).length}/${slot.tasks.length}</span>
-                    </div>
-                    <div class="p-3 space-y-2">
-                        ${slot.tasks.map(t => `
-                            <div onclick="toggleTask(${appState.currentDay},${sIdx},${t.id})" class="flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800 transition-all cursor-pointer ${t.done?'opacity-50':''}">
-                                <input type="checkbox" class="custom-checkbox" ${t.done?'checked':''} readonly>
-                                <span class="flex-1 text-sm font-medium ${t.done?'line-through text-zinc-500':'text-zinc-200'}">${t.text}</span>
-                                <div class="flex gap-3">
-                                    <button onclick="openReschedule(${appState.currentDay},${sIdx},${t.id},event)" class="text-zinc-600 hover:text-blue-400 text-xs">Move</button>
-                                    <button onclick="deleteTask(${appState.currentDay},${sIdx},${t.id},event)" class="text-zinc-600 hover:text-red-400 text-xs">Del</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                        <div class="flex gap-2 mt-2">
-                            <input id="${iId}" type="text" placeholder="Add task..." class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none" onkeydown="if(event.key==='Enter') addTask(${appState.currentDay},${sIdx},'${iId}')">
-                            <button onclick="addTask(${appState.currentDay},${sIdx},'${iId}')" class="bg-zinc-800 text-zinc-400 px-3 rounded-lg font-bold hover:bg-white hover:text-black transition-colors">+</button>
+                      return (
+                        <div key={optIdx} className={printClass}>
+                          <span className="flex gap-2">
+                            <span className="font-bold w-6">{getOptionLabel(optIdx)}</span>
+                            <span>{opt}</span>
+                          </span>
+                          <span className="no-print">
+                            {isOptCorrect && <CheckCircle size={16} className="text-green-600"/>}
+                            {isOptSelected && !isCorrect && <XCircle size={16} className="text-red-600"/>}
+                          </span>
+                          {/* Print Only Text indicators */}
+                          <span className="hidden print:block text-xs font-bold uppercase">
+                             {isOptCorrect ? '(Correct Answer)' : (isOptSelected ? '(Your Answer)' : '')}
+                          </span>
                         </div>
-                    </div>
-                </div>`;
-            }).join('');
-        };
+                      )
+                    })}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-400">Topic: {q.topic}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  // --- EXAM INTERFACE (Same as before) ---
+  const currentQ = questionData[currentQIndex];
+  const currentResp = responses[currentQIndex];
 
-        updateUI();
-    </script> 
-</body>
-</html>
+  return (
+    <div className="h-screen flex flex-col bg-gray-100 font-sans overflow-hidden no-print">
+      <header className="bg-blue-600 text-white h-14 flex justify-between items-center px-4 shadow-md shrink-0">
+        <div className="font-bold text-lg truncate">JVVNL Mock Test</div>
+        <div className="flex items-center gap-4">
+           <span className={`font-mono font-bold text-xl ${timeLeft < 300 ? 'text-red-200 animate-pulse' : ''}`}>
+             {formatTime(timeLeft)}
+           </span>
+           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}><Menu/></button>
+        </div>
+      </header>
 
+      <div className="flex flex-1 overflow-hidden relative">
+        <div className="flex-1 flex flex-col h-full bg-white overflow-y-auto">
+          <div className="bg-gray-50 border-b px-4 py-2 flex justify-between text-sm text-gray-600">
+            <span>Question {currentQIndex + 1}</span>
+            <span>+1.00 / -0.25</span>
+          </div>
+          <div className="p-6 md:p-8 max-w-4xl mx-auto w-full">
+            <p className="text-lg md:text-xl font-medium mb-6">{currentQ.question}</p>
+            <div className="space-y-3">
+              {currentQ.options.map((opt, idx) => (
+                <div key={idx} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer" onClick={() => handleAnswer(idx)}>
+                  <input type="radio" checked={currentResp?.answer === idx} onChange={() => handleAnswer(idx)} className="mt-1.5 w-5 h-5 accent-blue-600" />
+                  <div className="text-gray-700 text-lg"><span className="font-bold text-gray-500 mr-2">({getOptionLabel(idx)})</span>{opt}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-auto border-t bg-gray-50 p-4 flex justify-between">
+             <div className="flex gap-2">
+               <button onClick={handleMarkForReview} className="px-4 py-2 bg-purple-100 text-purple-700 rounded text-sm flex items-center gap-1"><Flag size={16}/> Review</button>
+               <button onClick={handleClearResponse} className="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm">Clear</button>
+             </div>
+             <button onClick={handleSaveAndNext} className="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow flex items-center gap-2">Save & Next <ChevronRight size={18}/></button>
+          </div>
+        </div>
+
+        <div className={`absolute inset-0 bg-white z-10 md:static md:w-80 border-l flex flex-col transition-transform ${isMenuOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
+           <div className="bg-gray-100 p-3 font-bold text-gray-700 border-b flex justify-between"><span>Questions Palette</span> <button className="md:hidden" onClick={() => setIsMenuOpen(false)}><X/></button></div>
+           <div className="flex-1 overflow-y-auto p-4 grid grid-cols-5 gap-2 content-start">
+             {questionData.map((_, i) => {
+               const r = responses[i];
+               let color = "bg-gray-200 text-gray-700";
+               if (r?.status === 'answered') color = "bg-green-500 text-white";
+               else if (r?.status === 'visited') color = "bg-red-500 text-white";
+               else if (r?.status === 'marked') color = "bg-purple-600 text-white";
+               return <button key={i} onClick={() => handleNavigate(i)} className={`h-10 rounded font-bold text-sm ${color} ${i===currentQIndex?'ring-2 ring-blue-400':''}`}>{i+1}</button>
+             })}
+           </div>
+           <div className="p-4 bg-gray-100 border-t"><button onClick={handleSubmit} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded font-bold shadow">Submit Test</button></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+                                
