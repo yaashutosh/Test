@@ -351,4 +351,252 @@ Ans. B`}
                             </button>
 
                             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                                <div className
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full text-sm text-left text-gray-600">
+                                        <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                                            <tr>
+                                                <th className="px-4 py-3 border-b">Q</th>
+                                                <th className="px-4 py-3 border-b">Status</th>
+                                                <th className="px-4 py-3 border-b">Time</th>
+                                                <th className="px-4 py-3 border-b">Answer</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {detailedStats.map((stat) => (
+                                                <tr key={stat.id} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-3 font-medium text-gray-900">{stat.id}</td>
+                                                    <td className="px-4 py-3">
+                                                        <span className={`px-2 py-1 rounded text-xs font-bold ${stat.status === 'Correct' ? 'bg-green-100 text-green-700' : stat.status === 'Wrong' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                            {stat.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 font-mono">{stat.time}s</td>
+                                                    <td className="px-4 py-3 text-xs text-gray-500 truncate max-w-[150px]" title={stat.correctOption}>{stat.correctOption}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- MAIN APP ---
+        function App() {
+            const [quizStarted, setQuizStarted] = useState(false);
+            const [examData, setExamData] = useState([]);
+            const [currentQIndex, setCurrentQIndex] = useState(0);
+            const [userAnswers, setUserAnswers] = useState({});
+            const [qStatus, setQStatus] = useState([]); 
+            const [timeSpent, setTimeSpent] = useState([]);
+            const [totalTime, setTotalTime] = useState(0); 
+            const [isExamActive, setIsExamActive] = useState(true);
+            const [showResult, setShowResult] = useState(false);
+            const [showPaletteMobile, setShowPaletteMobile] = useState(false);
+            
+            const [hint, setHint] = useState("");
+            const [isFetchingHint, setIsFetchingHint] = useState(false);
+            const [isSpeaking, setIsSpeaking] = useState(false);
+            const audioRef = useRef(null);
+            const timerRef = useRef(null);
+            const contentRef = useRef(null);
+
+            const startQuiz = (questions) => {
+                setExamData(questions);
+                setQStatus(Array(questions.length).fill('not_visited'));
+                setTimeSpent(Array(questions.length).fill(0));
+                setTotalTime(Math.ceil(questions.length * 0.75 * 60)); 
+                setQuizStarted(true);
+            };
+
+            useEffect(() => {
+                if (quizStarted && isExamActive && qStatus.length > 0 && qStatus[0] === 'not_visited') {
+                    const newStatus = [...qStatus];
+                    newStatus[0] = 'not_answered';
+                    setQStatus(newStatus);
+                }
+            }, [quizStarted, isExamActive, qStatus]);
+
+            useEffect(() => {
+                if (quizStarted && isExamActive && totalTime > 0) {
+                    timerRef.current = setInterval(() => {
+                        setTotalTime(prev => { if (prev <= 1) { handleSubmitExam(); return 0; } return prev - 1; });
+                        setTimeSpent(prev => { const newTimes = [...prev]; newTimes[currentQIndex] += 1; return newTimes; });
+                    }, 1000);
+                }
+                return () => clearInterval(timerRef.current);
+            }, [quizStarted, isExamActive, currentQIndex, totalTime]);
+
+            useEffect(() => {
+                setHint("");
+                if(audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+                setIsSpeaking(false);
+                if (contentRef.current) contentRef.current.scrollTop = 0;
+            }, [currentQIndex]);
+
+            const handleOptionSelect = (optIndex) => {
+                // IMPORTANT: This state update triggers re-render, checking the radio button
+                setUserAnswers(prev => ({ ...prev, [currentQIndex]: optIndex }));
+            };
+
+            const handleSaveNext = () => {
+                const newStatus = [...qStatus];
+                newStatus[currentQIndex] = userAnswers[currentQIndex] !== undefined ? 'answered' : 'not_answered';
+                if (currentQIndex < examData.length - 1) {
+                    const nextIndex = currentQIndex + 1;
+                    if (newStatus[nextIndex] === 'not_visited') newStatus[nextIndex] = 'not_answered';
+                    setCurrentQIndex(nextIndex);
+                }
+                setQStatus(newStatus);
+            };
+
+            const handleMarkReview = () => {
+                const newStatus = [...qStatus];
+                newStatus[currentQIndex] = userAnswers[currentQIndex] !== undefined ? 'marked_answered' : 'marked';
+                if (currentQIndex < examData.length - 1) {
+                    const nextIndex = currentQIndex + 1;
+                    if (newStatus[nextIndex] === 'not_visited') newStatus[nextIndex] = 'not_answered';
+                    setCurrentQIndex(nextIndex);
+                }
+                setQStatus(newStatus);
+            };
+
+            const handleClearResponse = () => {
+                const newAnswers = { ...userAnswers };
+                delete newAnswers[currentQIndex];
+                setUserAnswers(newAnswers);
+            };
+
+            const handleNavigation = (index) => {
+                const newStatus = [...qStatus];
+                if (newStatus[index] === 'not_visited') newStatus[index] = 'not_answered';
+                if (userAnswers[currentQIndex] === undefined && newStatus[currentQIndex] === 'not_visited') newStatus[currentQIndex] = 'not_answered';
+                setQStatus(newStatus);
+                setCurrentQIndex(index);
+                setShowPaletteMobile(false);
+            };
+
+            const handlePrev = () => { if (currentQIndex > 0) handleNavigation(currentQIndex - 1); };
+            const handleSubmitExam = () => { clearInterval(timerRef.current); setIsExamActive(false); setShowResult(true); };
+
+            const getAIHint = async () => {
+                if (hint) return;
+                setIsFetchingHint(true);
+                const q = examData[currentQIndex];
+                const prompt = `Explain briefly without giving the answer. Question: "${q.question_en}"`;
+                const response = await callGeminiText(prompt);
+                setHint(response);
+                setIsFetchingHint(false);
+            };
+
+            const speakQuestion = async () => {
+                if (isSpeaking) { if (audioRef.current) audioRef.current.pause(); setIsSpeaking(false); return; }
+                setIsSpeaking(true);
+                const q = examData[currentQIndex];
+                let textToRead = `Question ${currentQIndex + 1}. ${q.question_en}. `;
+                q.options_en.forEach((opt, i) => textToRead += `Option ${i+1}: ${opt}. `);
+                const audioUrl = await callGeminiTTS(textToRead);
+                if (audioUrl) {
+                    const audio = new Audio(audioUrl);
+                    audioRef.current = audio;
+                    audio.onended = () => setIsSpeaking(false);
+                    audio.play();
+                } else { setIsSpeaking(false); alert("TTS Unavailable"); }
+            };
+
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+            };
+
+            const getStatusClass = (status, index) => {
+                if(index === currentQIndex) return "border-2 border-indigo-600 animate-pulse";
+                switch (status) {
+                    case 'answered': return 'status-answered';
+                    case 'not_answered': return 'status-not-answered';
+                    case 'marked': return 'status-marked';
+                    case 'marked_answered': return 'status-marked-answered';
+                    default: return 'status-not-visited';
+                }
+            };
+
+            const calculateResults = () => {
+                let score = 0;
+                const stats = examData.map((q, idx) => {
+                    const userAns = userAnswers[idx];
+                    let statusStr = "Skipped";
+                    let userOptionText = "Not Attempted";
+                    if (userAns !== undefined) {
+                        userOptionText = q.options_en[userAns] || `Option ${userAns+1}`;
+                        if (userAns === q.correct) { score += 1; statusStr = "Correct"; } else { score -= 0.25; statusStr = "Wrong"; }
+                    }
+                    return { id: q.id, questionText: q.question_en, status: statusStr, time: timeSpent[idx], correctOption: q.options_en[q.correct], userOption: userOptionText };
+                });
+                return { score: Math.max(0, score), stats, total: examData.length };
+            };
+
+            if (!quizStarted) return <SetupScreen onStart={startQuiz} />;
+            const results = showResult ? calculateResults() : null;
+            const currentQ = examData[currentQIndex];
+
+            return (
+                <div className="flex flex-col h-full w-full bg-gray-100">
+                    <header className="bg-indigo-700 text-white p-2 px-4 shadow-md flex justify-between items-center z-20 shrink-0">
+                        <div><h1 className="text-lg font-bold">Mock Test</h1><span className="text-xs opacity-80">IBPS Mode</span></div>
+                        <div className="bg-indigo-900 px-3 py-1 rounded border border-indigo-500 font-mono text-xl font-bold text-yellow-400">{formatTime(totalTime)}</div>
+                    </header>
+
+                    <div className="flex-1 flex overflow-hidden relative w-full">
+                        <div className="flex-1 flex flex-col bg-white h-full relative">
+                            <div className="border-b px-4 py-3 flex justify-between items-center bg-gray-50 shrink-0 z-10">
+                                <span className="font-bold text-lg text-gray-800">Q.{currentQIndex + 1}</span>
+                                <div className="flex items-center gap-2"><span className="text-xs text-gray-500 uppercase">Time</span><div className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-sm font-bold border border-yellow-200">{formatTime(timeSpent[currentQIndex])}</div></div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scroll p-4 pb-24" ref={contentRef}>
+                                <div className="mb-6 relative">
+                                    <div className="absolute top-0 right-0 flex gap-2">
+                                        <button onClick={speakQuestion} className={`w-8 h-8 rounded-full flex items-center justify-center border transition ${isSpeaking ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-white text-gray-600 hover:bg-gray-50'}`}><i className={`fas ${isSpeaking ? 'fa-stop' : 'fa-volume-up'}`}></i></button>
+                                        <button onClick={getAIHint} className="w-8 h-8 bg-yellow-50 text-yellow-600 border border-yellow-200 rounded-full flex items-center justify-center hover:bg-yellow-100"><i className="fas fa-lightbulb"></i></button>
+                                    </div>
+                                    <div className="pr-20 text-lg font-medium text-gray-900 pb-2"><span className="text-indigo-600 font-bold mr-2">Q.</span>{currentQ.question_en}</div>
+                                    {currentQ.question_hi && currentQ.question_hi !== currentQ.question_en && <div className="text-lg font-medium text-gray-700 bg-gray-50 p-3 rounded-lg border mt-2"><span className="text-indigo-600 font-bold mr-2">प्र.</span>{currentQ.question_hi}</div>}
+                                    {(hint || isFetchingHint) && <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-900 animate-slide-up"><div className="font-bold mb-1"><i className="fas fa-robot mr-2"></i> Hint:</div>{isFetchingHint ? 'Thinking...' : hint}</div>}
+                                </div>
+
+                                <div className="space-y-3">
+                                    {currentQ.options_en.map((opt, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            onClick={() => handleOptionSelect(idx)}
+                                            className={`flex items-start p-3 border rounded-lg cursor-pointer transition hover:shadow-sm ${userAnswers[currentQIndex] === idx ? 'bg-indigo-50 border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-200 bg-white'}`}
+                                        >
+                                            <input 
+                                                type="radio" 
+                                                name={`q-${currentQIndex}`} 
+                                                className="mt-1.5 mr-3 w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                checked={userAnswers[currentQIndex] === idx}
+                                                onChange={() => handleOptionSelect(idx)}
+                                            />
+                                            <div className="w-full">
+                                                <div className="text-base font-medium text-gray-800">{opt}</div>
+                                                {currentQ.options_hi[idx] && currentQ.options_hi[idx] !== opt && <div className="text-sm text-gray-500 mt-0.5">{currentQ.options_hi[idx]}</div>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="border-t p-3 bg-white flex justify-between items-center shrink-0 z-20 shadow-sm">
+                                <div className="flex gap-2">
+                                    <button onClick={handleClearResponse} className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-semibold border border-gray-200">Clear</button>
+                                    <button onClick={handleMarkReview} className="px-3 py-2 text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded text-sm font-semibold">Review</button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={handlePrev} disabled={currentQIndex === 0} className={`px-4 py-2 rounded text-sm font-semibold ${currentQIndex === 0 ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-gray-200 hover:bg-gray-300'}`}>Back</button>
+                                    <button onClick={handleSaveNext} className="px-5 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold shadow text-sm">Save & Next</button>
+                                <
