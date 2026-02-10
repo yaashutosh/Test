@@ -1,523 +1,354 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Clock, 
-  Grid, 
-  ChevronRight, 
-  Flag, 
-  RotateCcw, 
-  CheckCircle, 
-  XCircle, 
-  Menu,
-  X,
-  Download,
-  Printer,
-  FileText
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Advanced Mock Test Generator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-// --- IBPS STYLE QUESTION DATA (Same 30 Questions) ---
-const questionData = [
-  {
-    id: 1,
-    question: "ट्रांसफार्मर के बारे में निम्नलिखित में से कौन सा कथन 'असत्य' (Incorrect) है?",
-    options: [
-      "यह पारस्परिक प्रेरण (Mutual Induction) के सिद्धांत पर कार्य करता है।",
-      "यह आवृत्ति (Frequency) को बदल देता है।",
-      "यह स्थैतिक (Static) उपकरण है।",
-      "यह ऊर्जा को एक सर्किट से दूसरे सर्किट में स्थानांतरित करता है।",
-      "इसमें घर्षण हानियाँ शून्य होती हैं।"
-    ],
-    correct: 1, 
-    topic: "Chapter 12: Transformer"
-  },
-  {
-    id: 2,
-    question: "एक 4-पोल, 50Hz प्रेरण मोटर 1440 RPM पर चल रही है। प्रतिशत स्लिप (% Slip) की गणना करें:",
-    options: ["2%", "3%", "4%", "5%", "6%"],
-    correct: 2, 
-    topic: "Chapter 17: 3-Phase Motor"
-  },
-  {
-    id: 3,
-    question: "फ्लेमिंग के बाएं हाथ के नियम (Left Hand Rule) के अनुसार, तर्जनी (Forefinger) क्या दर्शाती है?",
-    options: ["चालक की गति की दिशा", "उत्पन्न ईएमएफ (EMF) की दिशा", "चुंबकीय क्षेत्र (Magnetic Field) की दिशा", "धारा (Current) की दिशा", "यांत्रिक बल की दिशा"],
-    correct: 2, 
-    topic: "Chapter 14: DC Motor"
-  },
-  {
-    id: 4,
-    question: "घरेलू वायरिंग में 'अर्थिंग' (Earthing) का प्रतिरोध (Resistance) आदर्श रूप से कितना होना चाहिए?",
-    options: ["शून्य (Zero) के करीब", "100 ओम से अधिक", "1 किलो ओम", "अनंत (Infinite)", "500 ओम"],
-    correct: 0, 
-    topic: "Chapter 8: Earthing"
-  },
-  {
-    id: 5,
-    question: "निम्नलिखित में से कौन सा उपकरण 'एक्टिव कंपोनेंट' (Active Component) है?",
-    options: ["प्रतिरोधक (Resistor)", "संधारित्र (Capacitor)", "प्रेरक (Inductor)", "ट्रांजिस्टर (Transistor)", "ट्रांसफार्मर (Transformer)"],
-    correct: 3, 
-    topic: "Chapter 19: Basic Electronics"
-  },
-  {
-    id: 6,
-    question: "किरचॉफ का वोल्टेज नियम (KVL) किस परिपथ में लागू होता है?",
-    options: ["केवल रैखिक (Linear) परिपथ में", "केवल अरैखिक (Non-linear) परिपथ में", "खुले परिपथ (Open Circuit) में", "बंद लूप (Closed Loop) या मेष में", "केवल निष्क्रिय नेटवर्क में"],
-    correct: 3, 
-    topic: "Chapter 3: DC Theory"
-  },
-  {
-    id: 7,
-    question: "यदि किसी तार की लंबाई दोगुनी कर दी जाए और उसका अनुप्रस्थ काट क्षेत्रफल (Area) आधा कर दिया जाए, तो उसका प्रतिरोध क्या होगा?",
-    options: ["दोगुना हो जाएगा", "चार गुना हो जाएगा", "आधा रह जाएगा", "वही रहेगा", "आठ गुना हो जाएगा"],
-    correct: 1, 
-    topic: "Chapter 2: Resistor"
-  },
-  {
-    id: 8,
-    question: "DC जनरेटर में 'कम्यूटेशन' (Commutation) को सुधारने के लिए प्रयोग किए जाने वाले 'रेसिस्टेंस कम्यूटेशन' विधि में किस प्रकार के ब्रश का उपयोग होता है?",
-    options: ["कॉपर ब्रश", "कार्बन ब्रश", "एल्युमिनियम ब्रश", "धातु-ग्रेफाइट ब्रश", "पीतल ब्रश"],
-    correct: 1, 
-    topic: "Chapter 13: DC Generator"
-  },
-  {
-    id: 9,
-    question: "CRO (कैथोड रे ऑसिलोस्कोप) का उपयोग निम्नलिखित में से क्या मापने के लिए *नहीं* किया जा सकता?",
-    options: ["वोल्टेज (Voltage)", "आवृत्ति (Frequency)", "शक्ति (Power)", "फेज कोण (Phase Angle)", "वेवफॉर्म (Waveform)"],
-    correct: 2, 
-    topic: "Chapter 22: Measuring Instruments"
-  },
-  {
-    id: 10,
-    question: "एक सिलिकॉन डायोड का 'नी वोल्टेज' (Knee Voltage/Barrier Potential) लगभग कितना होता है?",
-    options: ["0.3 V", "0.7 V", "1.1 V", "0.1 V", "5 V"],
-    correct: 1, 
-    topic: "Chapter 20: Diode"
-  },
-  {
-    id: 11,
-    question: "शक्ति गुणांक (Power Factor) को सुधारने के लिए संधारित्र (Capacitor) को लोड के साथ कैसे जोड़ा जाता है?",
-    options: ["श्रेणी (Series) में", "समानांतर (Parallel) में", "स्टार कनेक्शन में", "सीरीज-पैरेलल में", "न्यूट्ल वायर के साथ"],
-    correct: 1, 
-    topic: "Chapter 5: AC Theory"
-  },
-  {
-    id: 12,
-    question: "सोडियम वेपर लैंप (Sodium Vapor Lamp) शुरू में कौन सा रंग देता है और पूर्ण प्रकाशित होने पर कौन सा रंग देता है?",
-    options: ["शुरू में नीला, बाद में सफेद", "शुरू में लाल, बाद में पीला", "शुरू में गुलाबी, बाद में पीला", "शुरू में पीला, बाद में लाल", "शुरू में हरा, बाद में नीला"],
-    correct: 2, 
-    topic: "Chapter 25: Illumination"
-  },
-  {
-    id: 13,
-    question: "भूमिगत केबलों (Underground Cables) में नमी के प्रवेश को रोकने के लिए किस भाग का उपयोग किया जाता है?",
-    options: ["आर्मरिंग (Armouring)", "बेडिंग (Bedding)", "मेटालिक शीथ (Metallic Sheath)", "सर्विंग (Serving)", "इन्सुलेशन"],
-    correct: 2, 
-    topic: "Chapter 9: Underground Cable"
-  },
-  {
-    id: 14,
-    question: "यूनिवर्सल मोटर (Universal Motor) किस सप्लाई पर कार्य कर सकती है?",
-    options: ["केवल AC पर", "केवल DC पर", "AC और DC दोनों पर", "केवल 3-फेज AC पर", "केवल बैटरी पर"],
-    correct: 2, 
-    topic: "Chapter 16: Single Phase Motor"
-  },
-  {
-    id: 15,
-    question: "निम्नलिखित में से कौन सा लॉजिक गेट (Logic Gate) 'यूनिवर्सल गेट' कहलाता है?",
-    options: ["AND", "OR", "NOT", "NAND", "XOR"],
-    correct: 3, 
-    topic: "Chapter 19: Digital Electronics"
-  },
-  {
-    id: 16,
-    question: "ट्रांसमिशन लाइनों में 'स्किन इफेक्ट' (Skin Effect) किस पर निर्भर करता है?",
-    options: ["चालक का व्यास", "आवृत्ति (Frequency)", "चालक के पदार्थ की प्रकृति", "चालक का आकार", "उपरोक्त सभी"],
-    correct: 4, 
-    topic: "Chapter 24: T&D"
-  },
-  {
-    id: 17,
-    question: "विद्युत आग (Electrical Fire) के लिए किस प्रकार के अग्निशामक का प्रयोग 'कदापि नहीं' करना चाहिए?",
-    options: ["कार्बन टेट्राक्लोराइड (CTC)", "झाग (Foam) प्रकार", "CO2", "हैलॉन", "शुष्क पाउडर"],
-    correct: 1, 
-    topic: "Chapter 25: Safety"
-  },
-  {
-    id: 18,
-    question: "दो वाटमीटर विधि में, यदि एक वाटमीटर की रीडिंग ऋणात्मक (Negative) आती है, तो इसका अर्थ है कि पावर फैक्टर:",
-    options: ["0.5 से कम है", "0.5 के बराबर है", "0.5 से अधिक है", "इकाई (Unity) है", "शून्य है"],
-    correct: 0, 
-    topic: "Chapter 5: Polyphase"
-  },
-  {
-    id: 19,
-    question: "लेड-एसिड बैटरी की क्षमता (Capacity) किसमें मापी जाती है?",
-    options: ["वाट (Watt)", "किलोवाट (kW)", "एम्पीयर-घंटा (Ah)", "वोल्ट (Volt)", "एम्पीयर (Ampere)"],
-    correct: 2, 
-    topic: "Chapter 6: Cell & Battery"
-  },
-  {
-    id: 20,
-    question: "MCB (Miniature Circuit Breaker) किस सिद्धांत पर कार्य करता है?",
-    options: ["केवल चुंबकीय प्रभाव", "केवल तापीय प्रभाव", "तापीय और चुंबकीय (Thermal & Magnetic) दोनों", "स्थिर वैद्युत प्रभाव", "रासायनिक प्रभाव"],
-    correct: 2, 
-    topic: "Chapter 25: Protection"
-  },
-  {
-    id: 21,
-    question: "एक साइन वेव (Sine Wave) का शिखर मान (Peak Value) 200V है। इसका RMS मान क्या होगा?",
-    options: ["141.4 V", "100 V", "282.8 V", "200 V", "127.4 V"],
-    correct: 0, 
-    topic: "Chapter 5: AC Theory"
-  },
-  {
-    id: 22,
-    question: "ट्रांसफार्मर में 'बखोल्ज रिले' (Buchholz Relay) का प्रयोग किसके लिए किया जाता है?",
-    options: ["बाहरी दोषों से सुरक्षा", "शीतलन (Cooling) नियंत्रण", "आंतरिक दोषों (Internal Faults) से सुरक्षा", "वोल्टेज नियमन", "लाइटनिंग सुरक्षा"],
-    correct: 2, 
-    topic: "Chapter 12: Transformer"
-  },
-  {
-    id: 23,
-    question: "DC मोटर की गति (N) और बैक ईएमएफ (Eb) के बीच क्या संबंध है?",
-    options: ["N ∝ 1/Eb", "N ∝ Eb", "N ∝ Eb²", "N ∝ √Eb", "कोई संबंध नहीं"],
-    correct: 1, 
-    topic: "Chapter 14: DC Motor"
-  },
-  {
-    id: 24,
-    question: "मेगर (Megger) का उपयोग क्या मापने के लिए किया जाता है?",
-    options: ["निम्न प्रतिरोध", "मध्यम प्रतिरोध", "उच्च इन्सुलेशन प्रतिरोध", "धारा", "वोल्टेज"],
-    correct: 2, 
-    topic: "Chapter 22: Instruments"
-  },
-  {
-    id: 25,
-    question: "भारतीय विद्युत नियमों (IE Rules) के अनुसार, लो-वोल्टेज आपूर्ति में घोषित वोल्टेज से अधिकतम कितना परिवर्तन अनुमन्य (Permissible) है?",
-    options: ["±1%", "±3%", "±5%", "±10%", "±12.5%"],
-    correct: 2, 
-    topic: "Chapter 24: Rules"
-  },
-  {
-    id: 26,
-    question: "3-फेज डेल्टा कनेक्शन में, लाइन करंट (IL) और फेज करंट (Iph) में क्या संबंध है?",
-    options: ["IL = Iph", "IL = √3 × Iph", "IL = Iph / √3", "IL = 3 × Iph", "IL = Iph / 2"],
-    correct: 1, 
-    topic: "Chapter 5: Polyphase"
-  },
-  {
-    id: 27,
-    question: "कंड्यूट पाइप वायरिंग (Conduit Wiring) में 'एल्बो' (Elbow) का प्रयोग कहाँ किया जाता है?",
-    options: ["तारों को जोड़ने के लिए", "पाइप की लंबाई बढ़ाने के लिए", "90 डिग्री के मोड़ (Turn) पर", "दीवार पर पाइप कसने के लिए", "तारों को बाहर निकालने के लिए"],
-    correct: 2, 
-    topic: "Chapter 10: Wiring Accessories"
-  },
-  {
-    id: 28,
-    question: "सोल्डरिंग आयरन की बिट (Bit) किस धातु की बनी होती है?",
-    options: ["लोहा", "स्टील", "पीतल", "तांबा (Copper)", "एल्युमिनियम"],
-    correct: 3, 
-    topic: "Chapter 11: Soldering"
-  },
-  {
-    id: 29,
-    question: "अल्टरनेटर के रोटर को DC सप्लाई देने के लिए किस जनरेटर का उपयोग एक्साइटर (Exciter) के रूप में किया जाता है?",
-    options: ["DC सीरीज जनरेटर", "DC शंट जनरेटर", "DC कंपाउंड जनरेटर", "AC जनरेटर", "इंडक्शन जनरेटर"],
-    correct: 1, 
-    topic: "Chapter 15: Alternator"
-  },
-  {
-    id: 30,
-    question: "किसी परमाणु के नाभिक (Nucleus) में क्या होते हैं?",
-    options: ["केवल प्रोटॉन", "केवल न्यूट्रॉन", "प्रोटॉन और न्यूट्रॉन", "इलेक्ट्रॉन और प्रोटॉन", "इलेक्ट्रॉन और न्यूट्रॉन"],
-    correct: 2, 
-    topic: "Chapter 1: Basic Electricity"
-  }
-];
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-export default function IBPSWithPDF() {
-  const [examStatus, setExamStatus] = useState('instructions'); 
-  const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [responses, setResponses] = useState({}); 
-  const [timeLeft, setTimeLeft] = useState(30 * 60); 
-  const [isMenuOpen, setIsMenuOpen] = useState(false); 
-  
-  // Timer Logic
-  useEffect(() => {
-    let timer;
-    if (examStatus === 'exam' && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && examStatus === 'exam') {
-      handleSubmit();
-    }
-    return () => clearInterval(timer);
-  }, [examStatus, timeLeft]);
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #555; }
 
-  // Handle PDF Print
-  const handlePrint = () => {
-    window.print();
-  };
+        /* Status Colors */
+        .status-answered { background-color: #5bb75b; color: white; border-color: #5bb75b; } 
+        .status-not-answered { background-color: #d9534f; color: white; border-color: #d9534f; } 
+        .status-marked { background-color: #8352ce; color: white; border-radius: 50%; border-color: #8352ce; } 
+        .status-marked-answered { background-color: #8352ce; color: white; position: relative; border-radius: 50%; } 
+        .status-marked-answered::after { content: '✔'; position: absolute; bottom: -2px; right: -2px; font-size: 8px; background: #5bb75b; border-radius: 50%; width: 12px; height: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid white; }
+        .status-not-visited { background-color: #fcfcfc; color: black; border: 1px solid #ccc; } 
+        
+        .question-text-hi { font-family: 'Nirmala UI', 'Mangal', sans-serif; line-height: 1.6; }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen w-screen overflow-hidden">
+    <div id="root" class="h-full w-full"></div>
 
-  const handleAnswer = (optionIdx) => {
-    setResponses({
-      ...responses,
-      [currentQIndex]: {
-        ...responses[currentQIndex],
-        answer: optionIdx,
-        status: 'answered'
-      }
-    });
-  };
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const apiKey = ""; // Injected by environment
 
-  const handleMarkForReview = () => {
-    setResponses(prev => ({
-      ...prev,
-      [currentQIndex]: { ...prev[currentQIndex], status: 'marked' }
-    }));
-    if (currentQIndex < questionData.length - 1) setCurrentQIndex(prev => prev + 1);
-  };
+        // --- UTILS: AUDIO CONVERSION ---
+        function pcmToWav(pcmData, sampleRate = 24000) {
+            const numChannels = 1;
+            const bitsPerSample = 16;
+            const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+            const blockAlign = (numChannels * bitsPerSample) / 8;
+            const dataSize = pcmData.length;
+            const buffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(buffer);
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            writeString(0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeString(8, 'WAVE'); writeString(12, 'fmt ');
+            view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true); writeString(36, 'data'); view.setUint32(40, dataSize, true);
+            new Uint8Array(buffer, 44).set(new Uint8Array(pcmData));
+            return buffer;
+        }
 
-  const handleClearResponse = () => {
-    const newResponses = { ...responses };
-    delete newResponses[currentQIndex];
-    setResponses(newResponses);
-  };
+        // --- API HELPERS ---
+        async function callGeminiText(prompt) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                if (!response.ok) return "Error connecting to AI service.";
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error generating response.";
+            } catch (error) { return "Failed to connect to AI service."; }
+        }
 
-  const handleSaveAndNext = () => {
-    if (!responses[currentQIndex]?.answer && responses[currentQIndex]?.status !== 'marked') {
-      setResponses(prev => ({ ...prev, [currentQIndex]: { status: 'visited' }}));
-    }
-    if (currentQIndex < questionData.length - 1) setCurrentQIndex(prev => prev + 1);
-  };
+        async function callGeminiTTS(text) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: text }] }],
+                        generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } }
+                    })
+                });
+                if (!response.ok) return null;
+                const data = await response.json();
+                const base64Audio = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                if (base64Audio) {
+                    const binaryString = atob(base64Audio);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+                    const blob = new Blob([pcmToWav(bytes)], { type: 'audio/wav' });
+                    return URL.createObjectURL(blob);
+                }
+                return null;
+            } catch (error) { return null; }
+        }
 
-  const handleNavigate = (index) => {
-    if (!responses[currentQIndex]) {
-       setResponses(prev => ({ ...prev, [currentQIndex]: { status: 'visited' }}));
-    }
-    setCurrentQIndex(index);
-    setIsMenuOpen(false);
-  };
+        // --- DEFAULT INPUT DATA ---
+        const DEFAULT_INPUT_TEXT = `Q. What is the S.I. unit of Electric Charge? / विद्युत आवेश की S.I. इकाई क्या है?
+A. Ampere / एम्पीयर
+B. Coulomb / कूलम्ब
+C. Volt / वोल्ट
+D. Watt / वाट
+E. None of these / इनमें से कोई नहीं
+Ans. B
+Q. Which instrument is used to measure the specific gravity of a battery electrolyte? / बैटरी इलेक्ट्रोलाइट के विशिष्ट गुरुत्व को मापने के लिए किस उपकरण का उपयोग किया जाता है?
+A. Lactometer / लैक्टोमीटर
+B. Hygrometer / हाइग्रोमीटर
+C. Hydrometer / हाइड्रोमीटर
+D. Pyrometer / पाइरोमीटर
+E. None of these / इनमें से कोई नहीं
+Ans. C
+Q. The core of a transformer is made of which material? / ट्रांसफार्मर की कोर किस सामग्री से बनी होती है?
+A. Copper / तांबा
+B. Aluminum / एल्युमीनियम
+C. Silicon Steel / सिलिकॉन स्टील
+D. Cast Iron / कच्चा लोहा
+E. None of these / इनमें से कोई नहीं
+Ans. C
+Q. What is the unit of Frequency? / आवृत्ति (Frequency) का मात्रक क्या है?
+A. Hertz / हर्ट्ज
+B. Second / सेकंड
+C. Farad / फैराड
+D. Henry / हेनरी
+E. None of these / इनमें से कोई नहीं
+Ans. A
+Q. Which wire is used for earthing in domestic wiring? / घरेलू वायरिंग में अर्थिंग (Earthing) के लिए किस तार का उपयोग किया जाता है?
+A. Red / लाल
+B. Black / काला
+C. Green / हरा
+D. Blue / नीला
+E. None of these / इनमें से कोई नहीं
+Ans. C`;
 
-  const handleSubmit = () => {
-    setExamStatus('result');
-  };
+        // --- PARSER LOGIC ---
+        const parseInputText = (text) => {
+            // Updated regex to handle Q1. Q1) A) A. and varying spaces
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            const parsed = [];
+            let currentQ = null;
 
-  const getOptionLabel = (idx) => String.fromCharCode(65 + idx);
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-  };
+            lines.forEach(line => {
+                // Regex for Q start: Q followed by optional number, then dot or paren
+                if (line.match(/^Q\d*[\.)]/i)) {
+                    if (currentQ) parsed.push(currentQ);
+                    const cleanLine = line.replace(/^Q\d*[\.)]\s*/i, '').trim();
+                    // Split logic improved for spaces around slash
+                    const parts = cleanLine.split(/\s*\/\s*/);
+                    
+                    currentQ = {
+                        id: parsed.length + 1,
+                        topic: "General",
+                        question_en: parts[0],
+                        question_hi: parts.length > 1 ? parts[1] : parts[0],
+                        options_en: [],
+                        options_hi: [],
+                        correct: 0
+                    };
+                } 
+                // Regex for Option start: A-E followed by dot or paren
+                else if (currentQ && line.match(/^[A-E][\.)]/i)) {
+                    const cleanOpt = line.replace(/^[A-E][\.)]\s*/i, '').trim();
+                    const optParts = cleanOpt.split(/\s*\/\s*/);
+                    currentQ.options_en.push(optParts[0]);
+                    currentQ.options_hi.push(optParts.length > 1 ? optParts[1] : optParts[0]);
+                } 
+                // Regex for Answer start
+                else if (currentQ && (line.match(/^Ans[\.:]/i) || line.match(/^Answer:/i))) {
+                    const ansPart = line.replace(/^(Ans[\.:]|Answer:)\s*/i, '').trim().toUpperCase();
+                    const ansChar = ansPart.charAt(0);
+                    const mapping = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4 };
+                    if (mapping[ansChar] !== undefined) {
+                        currentQ.correct = mapping[ansChar];
+                    }
+                }
+            });
+            if (currentQ) parsed.push(currentQ);
+            return parsed;
+        };
 
-  // --- INSTRUCTIONS ---
-  if (examStatus === 'instructions') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans select-none print:hidden">
-        <div className="bg-white max-w-2xl w-full rounded-lg shadow-xl border border-gray-300 overflow-hidden">
-          <div className="bg-blue-700 p-4 text-white flex justify-between items-center">
-            <h1 className="text-xl font-bold">JVVNL/IBPS Technical Exam</h1>
-            <div className="text-xs bg-blue-800 px-2 py-1 rounded">System No: C001</div>
-          </div>
-          <div className="p-8 h-[60vh] overflow-y-auto">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 underline">Instructions:</h2>
-            <ul className="list-disc space-y-3 pl-5 text-sm text-gray-700">
-              <li>कुल प्रश्न: 30 | समय: 30 मिनट।</li>
-              <li>नेगेटिव मार्किंग: 0.25 अंक।</li>
-              <li>पेपर खत्म होने के बाद आप <strong>PDF Download</strong> कर सकते हैं।</li>
-              <li>प्रश्न पैलेट दाईं ओर है।</li>
-            </ul>
-          </div>
-          <div className="p-4 border-t bg-gray-100 flex justify-end">
-            <button onClick={() => setExamStatus('exam')} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded shadow font-bold">
-              Start Exam
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+        // --- SETUP COMPONENT ---
+        function SetupScreen({ onStart }) {
+            const [inputText, setInputText] = useState(DEFAULT_INPUT_TEXT);
+            const [error, setError] = useState("");
 
-  // --- RESULT & PDF VIEW ---
-  if (examStatus === 'result') {
-    let correct = 0, wrong = 0, attempted = 0;
-    questionData.forEach((q, idx) => {
-      const resp = responses[idx];
-      if (resp && resp.answer !== undefined) {
-        attempted++;
-        if (resp.answer === q.correct) correct++; else wrong++;
-      }
-    });
-    const score = (correct * 1) - (wrong * 0.25);
+            const handleStart = () => {
+                try {
+                    const questions = parseInputText(inputText);
+                    if (questions.length === 0) {
+                        setError("No valid questions found. Please check format (Q. / A. / Ans.)");
+                        return;
+                    }
+                    // Validate options count
+                    const invalidQ = questions.find(q => q.options_en.length < 2);
+                    if (invalidQ) {
+                        setError(`Question ${invalidQ.id} has insufficient options. Need at least 2.`);
+                        return;
+                    }
+                    onStart(questions);
+                } catch (e) {
+                    setError("Error parsing text. Please ensure correct format.");
+                }
+            };
 
-    return (
-      <div className="min-h-screen bg-gray-100 p-4 font-sans">
-        <style>{`
-          @media print {
-            @page { margin: 1cm; size: A4; }
-            body { background: white; -webkit-print-color-adjust: exact; }
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            .page-break { page-break-inside: avoid; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
-            .correct-ans { color: #166534 !important; font-weight: bold; }
-            .wrong-ans { color: #991b1b !important; }
-            .user-selection { text-decoration: underline; }
-          }
-        `}</style>
-
-        {/* --- DASHBOARD (Hidden on Print) --- */}
-        <div className="max-w-4xl mx-auto mb-8 no-print">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-            <div className="bg-gray-800 text-white p-6 text-center">
-              <h2 className="text-3xl font-bold">{score.toFixed(2)} / 30</h2>
-              <p className="text-gray-400">Final Score</p>
-            </div>
-            <div className="grid grid-cols-3 divide-x border-b">
-              <div className="p-4 text-center"><div className="text-2xl font-bold text-green-600">{correct}</div><div className="text-xs uppercase text-gray-500">Correct</div></div>
-              <div className="p-4 text-center"><div className="text-2xl font-bold text-red-600">{wrong}</div><div className="text-xs uppercase text-gray-500">Wrong</div></div>
-              <div className="p-4 text-center"><div className="text-2xl font-bold text-gray-600">{30 - attempted}</div><div className="text-xs uppercase text-gray-500">Skipped</div></div>
-            </div>
-            <div className="p-6 flex justify-center gap-4">
-              <button onClick={handlePrint} className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 shadow-md font-bold transition-transform transform active:scale-95">
-                <Download size={20}/> Download PDF / Print
-              </button>
-              <button onClick={() => window.location.reload()} className="flex items-center gap-2 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-bold transition-transform transform active:scale-95">
-                <RotateCcw size={20}/> New Test
-              </button>
-            </div>
-          </div>
-          <div className="text-center text-gray-500 text-sm mb-4">Scroll down to see solutions or click "Download PDF"</div>
-        </div>
-
-        {/* --- SOLUTION LIST (Visible on Screen & Print) --- */}
-        <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 print:shadow-none print:p-0">
-          <div className="border-b pb-4 mb-6 flex justify-between items-end">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">JVVNL Technical Exam - Solutions</h1>
-              <p className="text-sm text-gray-500">Date: {new Date().toLocaleDateString()}</p>
-            </div>
-            <div className="text-right hidden print:block">
-              <p className="font-bold">Score: {score.toFixed(2)}/30</p>
-              <p className="text-xs">Correct: {correct} | Wrong: {wrong}</p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {questionData.map((q, index) => {
-              const userResp = responses[index];
-              const userAns = userResp?.answer;
-              const isCorrect = userAns === q.correct;
-              const isSkipped = userAns === undefined;
-
-              return (
-                <div key={index} className="page-break">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-bold text-gray-700">Q.{index + 1}</span>
-                    <span className={`text-xs font-bold px-2 py-1 rounded no-print
-                      ${isCorrect ? 'bg-green-100 text-green-700' : isSkipped ? 'bg-gray-100 text-gray-600' : 'bg-red-100 text-red-700'}`}>
-                      {isCorrect ? 'Correct' : isSkipped ? 'Skipped' : 'Wrong'}
-                    </span>
-                  </div>
-                  
-                  <p className="text-gray-900 font-medium mb-3 text-lg">{q.question}</p>
-
-                  <div className="grid gap-2">
-                    {q.options.map((opt, optIdx) => {
-                      const isOptCorrect = optIdx === q.correct;
-                      const isOptSelected = optIdx === userAns;
-                      
-                      let printClass = "p-2 rounded border text-sm flex justify-between items-center ";
-                      
-                      // Screen Styles
-                      if (isOptCorrect) printClass += "bg-green-50 border-green-300 text-green-900 correct-ans ";
-                      else if (isOptSelected && !isCorrect) printClass += "bg-red-50 border-red-300 text-red-900 wrong-ans ";
-                      else printClass += "bg-white border-gray-200 text-gray-600 ";
-
-                      return (
-                        <div key={optIdx} className={printClass}>
-                          <span className="flex gap-2">
-                            <span className="font-bold w-6">{getOptionLabel(optIdx)}</span>
-                            <span>{opt}</span>
-                          </span>
-                          <span className="no-print">
-                            {isOptCorrect && <CheckCircle size={16} className="text-green-600"/>}
-                            {isOptSelected && !isCorrect && <XCircle size={16} className="text-red-600"/>}
-                          </span>
-                          {/* Print Only Text indicators */}
-                          <span className="hidden print:block text-xs font-bold uppercase">
-                             {isOptCorrect ? '(Correct Answer)' : (isOptSelected ? '(Your Answer)' : '')}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <div className="mt-2 text-xs text-gray-400">Topic: {q.topic}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  // --- EXAM INTERFACE (Same as before) ---
-  const currentQ = questionData[currentQIndex];
-  const currentResp = responses[currentQIndex];
-
-  return (
-    <div className="h-screen flex flex-col bg-gray-100 font-sans overflow-hidden no-print">
-      <header className="bg-blue-600 text-white h-14 flex justify-between items-center px-4 shadow-md shrink-0">
-        <div className="font-bold text-lg truncate">JVVNL Mock Test</div>
-        <div className="flex items-center gap-4">
-           <span className={`font-mono font-bold text-xl ${timeLeft < 300 ? 'text-red-200 animate-pulse' : ''}`}>
-             {formatTime(timeLeft)}
-           </span>
-           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}><Menu/></button>
-        </div>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden relative">
-        <div className="flex-1 flex flex-col h-full bg-white overflow-y-auto">
-          <div className="bg-gray-50 border-b px-4 py-2 flex justify-between text-sm text-gray-600">
-            <span>Question {currentQIndex + 1}</span>
-            <span>+1.00 / -0.25</span>
-          </div>
-          <div className="p-6 md:p-8 max-w-4xl mx-auto w-full">
-            <p className="text-lg md:text-xl font-medium mb-6">{currentQ.question}</p>
-            <div className="space-y-3">
-              {currentQ.options.map((opt, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer" onClick={() => handleAnswer(idx)}>
-                  <input type="radio" checked={currentResp?.answer === idx} onChange={() => handleAnswer(idx)} className="mt-1.5 w-5 h-5 accent-blue-600" />
-                  <div className="text-gray-700 text-lg"><span className="font-bold text-gray-500 mr-2">({getOptionLabel(idx)})</span>{opt}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="mt-auto border-t bg-gray-50 p-4 flex justify-between">
-             <div className="flex gap-2">
-               <button onClick={handleMarkForReview} className="px-4 py-2 bg-purple-100 text-purple-700 rounded text-sm flex items-center gap-1"><Flag size={16}/> Review</button>
-               <button onClick={handleClearResponse} className="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm">Clear</button>
-             </div>
-             <button onClick={handleSaveAndNext} className="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow flex items-center gap-2">Save & Next <ChevronRight size={18}/></button>
-          </div>
-        </div>
-
-        <div className={`absolute inset-0 bg-white z-10 md:static md:w-80 border-l flex flex-col transition-transform ${isMenuOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
-           <div className="bg-gray-100 p-3 font-bold text-gray-700 border-b flex justify-between"><span>Questions Palette</span> <button className="md:hidden" onClick={() => setIsMenuOpen(false)}><X/></button></div>
-           <div className="flex-1 overflow-y-auto p-4 grid grid-cols-5 gap-2 content-start">
-             {questionData.map((_, i) => {
-               const r = responses[i];
-               let color = "bg-gray-200 text-gray-700";
-               if (r?.status === 'answered') color = "bg-green-500 text-white";
-               else if (r?.status === 'visited') color = "bg-red-500 text-white";
-               else if (r?.status === 'marked') color = "bg-purple-600 text-white";
-               return <button key={i} onClick={() => handleNavigate(i)} className={`h-10 rounded font-bold text-sm ${color} ${i===currentQIndex?'ring-2 ring-blue-400':''}`}>{i+1}</button>
-             })}
-           </div>
-           <div className="p-4 bg-gray-100 border-t"><button onClick={handleSubmit} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded font-bold shadow">Submit Test</button></div>
-        </div>
-      </div>
-    </div>
-  );
-}
+            return (
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[85vh] border border-gray-200">
+                        <div className="bg-indigo-600 p-8 md:w-1/3 text-white flex flex-col justify-between hidden md:flex">
+                            <div>
+                                <h1 className="text-3xl font-bold mb-4">Quiz Generator</h1>
+                                <p className="text-indigo-100 mb-6">Convert any text into a professional IBPS-style mock test instantly.</p>
                                 
+                                <div className="bg-indigo-700/50 p-4 rounded-lg border border-indigo-500/30">
+                                    <h3 className="font-bold text-xs uppercase tracking-wider text-indigo-200 mb-3">Expected Format</h3>
+                                    <pre className="text-xs text-indigo-50 whitespace-pre-wrap font-mono leading-relaxed opacity-80">
+{`Q. Question English / हिंदी
+A. Option 1
+B. Option 2
+C. Option 3
+D. Option 4
+Ans. B`}
+                                    </pre>
+                                </div>
+                            </div>
+                            <div className="text-xs text-indigo-300">Powered by Gemini AI • React • Tailwind</div>
+                        </div>
+
+                        <div className="p-6 md:w-2/3 flex flex-col h-full bg-white relative">
+                            <h2 className="text-xl font-bold text-gray-800 mb-4 md:hidden">Create Quiz</h2>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-sm font-semibold text-gray-700">Paste Questions</label>
+                                <button onClick={() => setInputText('')} className="text-xs text-red-500 hover:text-red-700 font-medium">Clear All</button>
+                            </div>
+                            
+                            <textarea 
+                                className="flex-1 w-full p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none custom-scroll bg-gray-50 text-gray-700"
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                placeholder="Paste questions here..."
+                            ></textarea>
+                            
+                            {error && <div className="mt-3 p-3 bg-red-50 text-red-700 text-sm rounded border border-red-200 flex items-center"><i className="fas fa-exclamation-circle mr-2"></i> {error}</div>}
+
+                            <button 
+                                onClick={handleStart}
+                                className="mt-4 w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3.5 px-6 rounded-lg shadow-lg transform transition hover:scale-[1.01] flex items-center justify-center gap-2"
+                            >
+                                <span>START QUIZ</span>
+                                <i className="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- RESULT MODAL ---
+        function ResultModal({ score, total, detailedStats, onClose }) {
+            const [studyPlan, setStudyPlan] = useState("");
+            const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+
+            const copyToClipboard = () => {
+                let text = `[Quiz Results]\nScore: ${score}/${total}\nDate: ${new Date().toLocaleString()}\n\n`;
+                detailedStats.forEach(stat => {
+                    text += `Q${stat.id}: ${stat.questionText}\nTime: ${stat.time}s | Status: ${stat.status}\nCorrect: ${stat.correctOption} | Yours: ${stat.userOption}\n\n`;
+                });
+
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed"; textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus(); textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('Results copied to clipboard!');
+                } catch (err) { alert("Failed to copy."); }
+                document.body.removeChild(textArea);
+            };
+
+            const generateStudyPlan = async () => {
+                setIsGeneratingPlan(true);
+                const weakQuestions = detailedStats.filter(s => s.status === "Wrong");
+                let prompt = "";
+                if (weakQuestions.length === 0) {
+                     prompt = `I got full marks (${score}/${total}) in a quiz. Give me 3 tips to maintain this consistency.`;
+                } else {
+                    const weakTopics = weakQuestions.map(q => q.questionText.substring(0, 50)).join("\n");
+                    prompt = `I failed these questions:\n${weakTopics}\n\nGive me a 3-point study plan (Hindi/English mixed) to improve.`;
+                }
+                const response = await callGeminiText(prompt);
+                setStudyPlan(response);
+                setIsGeneratingPlan(false);
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden animate-slide-up">
+                        <div className="bg-gray-900 text-white p-4 flex justify-between items-center shrink-0">
+                            <h2 className="text-lg font-bold">Result Summary</h2>
+                            <button onClick={onClose} className="hover:text-gray-300"><i className="fas fa-times fa-lg"></i></button>
+                        </div>
+                        
+                        <div className="p-6 overflow-y-auto flex-1 custom-scroll bg-gray-50">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm text-center">
+                                    <div className="text-4xl font-extrabold text-gray-800 mb-1">{score}</div>
+                                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Score</div>
+                                </div>
+                                <div className="bg-white p-5 rounded-lg border border-green-200 shadow-sm text-center">
+                                    <div className="text-4xl font-extrabold text-green-600 mb-1">{detailedStats.filter(s => s.status === 'Correct').length}</div>
+                                    <div className="text-xs font-semibold text-green-600 uppercase tracking-wide">Correct</div>
+                                </div>
+                                 <div className="bg-white p-5 rounded-lg border border-red-200 shadow-sm text-center">
+                                    <div className="text-4xl font-extrabold text-red-600 mb-1">{detailedStats.filter(s => s.status === 'Wrong').length}</div>
+                                    <div className="text-xs font-semibold text-red-600 uppercase tracking-wide">Wrong</div>
+                                </div>
+                            </div>
+
+                            <div className="mb-6 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                                <div className="p-4 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
+                                    <h3 className="font-bold text-indigo-900 flex items-center"><i className="fas fa-brain mr-2"></i> AI Analysis</h3>
+                                    {!studyPlan && (
+                                        <button onClick={generateStudyPlan} disabled={isGeneratingPlan} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-2 px-3 rounded shadow transition">
+                                            {isGeneratingPlan ? 'Thinking...' : 'Analyze Mistakes'}
+                                        </button>
+                                    )}
+                                </div>
+                                {studyPlan && <div className="p-4 text-sm text-gray-700 whitespace-pre-line leading-relaxed">{studyPlan}</div>}
+                            </div>
+
+                            <button onClick={copyToClipboard} className="w-full mb-6 bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
+                                <i className="fas fa-clipboard"></i> Copy Detailed Report
+                            </button>
+
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                                <div className
