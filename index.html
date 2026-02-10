@@ -15,12 +15,14 @@
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Icons -->
+    <!-- Icons (Ensure HTTPS for GitHub Pages) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
+        /* Mobile Viewport Fix */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; height: 100dvh; width: 100vw; overflow: hidden; }
+        #root { height: 100%; width: 100%; }
+
         /* Custom Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -44,14 +46,16 @@
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
     </style>
 </head>
-<body class="bg-gray-100 h-screen w-screen overflow-hidden">
-    <div id="root" class="h-full w-full"></div>
+<body class="bg-gray-100">
+    <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-        const apiKey = ""; // Injected by environment
+        const apiKey = ""; // API Key environment variable
 
-        // --- UTILS: AUDIO CONVERSION ---
+        // --- UTILS: AUDIO & STORAGE ---
+        const STORAGE_KEY = "MOCK_TEST_STATE_V1";
+
         function pcmToWav(pcmData, sampleRate = 24000) {
             const numChannels = 1;
             const bitsPerSample = 16;
@@ -113,7 +117,45 @@
             } catch (error) { return null; }
         }
 
-        // --- DEFAULT INPUT DATA ---
+        // --- PARSER LOGIC ---
+        const parseInputText = (text) => {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            const parsed = [];
+            let currentQ = null;
+
+            lines.forEach(line => {
+                if (line.match(/^Q\d*[\.)]/i)) {
+                    if (currentQ) parsed.push(currentQ);
+                    const cleanLine = line.replace(/^Q\d*[\.)]\s*/i, '').trim();
+                    const parts = cleanLine.split(/\s*\/\s*/);
+                    currentQ = {
+                        id: parsed.length + 1,
+                        question_en: parts[0],
+                        question_hi: parts.length > 1 ? parts[1] : parts[0],
+                        options_en: [],
+                        options_hi: [],
+                        correct: 0
+                    };
+                } 
+                else if (currentQ && line.match(/^[A-E][\.)]/i)) {
+                    const cleanOpt = line.replace(/^[A-E][\.)]\s*/i, '').trim();
+                    const optParts = cleanOpt.split(/\s*\/\s*/);
+                    currentQ.options_en.push(optParts[0]);
+                    currentQ.options_hi.push(optParts.length > 1 ? optParts[1] : optParts[0]);
+                } 
+                else if (currentQ && (line.match(/^Ans[\.:]/i) || line.match(/^Answer:/i))) {
+                    const ansPart = line.replace(/^(Ans[\.:]|Answer:)\s*/i, '').trim().toUpperCase();
+                    const ansChar = ansPart.charAt(0);
+                    const mapping = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4 };
+                    if (mapping[ansChar] !== undefined) {
+                        currentQ.correct = mapping[ansChar];
+                    }
+                }
+            });
+            if (currentQ) parsed.push(currentQ);
+            return parsed;
+        };
+
         const DEFAULT_INPUT_TEXT = `Q. What is the S.I. unit of Electric Charge? / विद्युत आवेश की S.I. इकाई क्या है?
 A. Ampere / एम्पीयर
 B. Coulomb / कूलम्ब
@@ -134,136 +176,77 @@ B. Aluminum / एल्युमीनियम
 C. Silicon Steel / सिलिकॉन स्टील
 D. Cast Iron / कच्चा लोहा
 E. None of these / इनमें से कोई नहीं
-Ans. C
-Q. What is the unit of Frequency? / आवृत्ति (Frequency) का मात्रक क्या है?
-A. Hertz / हर्ट्ज
-B. Second / सेकंड
-C. Farad / फैराड
-D. Henry / हेनरी
-E. None of these / इनमें से कोई नहीं
-Ans. A
-Q. Which wire is used for earthing in domestic wiring? / घरेलू वायरिंग में अर्थिंग (Earthing) के लिए किस तार का उपयोग किया जाता है?
-A. Red / लाल
-B. Black / काला
-C. Green / हरा
-D. Blue / नीला
-E. None of these / इनमें से कोई नहीं
 Ans. C`;
 
-        // --- PARSER LOGIC ---
-        const parseInputText = (text) => {
-            // Updated regex to handle Q1. Q1) A) A. and varying spaces
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-            const parsed = [];
-            let currentQ = null;
-
-            lines.forEach(line => {
-                // Regex for Q start: Q followed by optional number, then dot or paren
-                if (line.match(/^Q\d*[\.)]/i)) {
-                    if (currentQ) parsed.push(currentQ);
-                    const cleanLine = line.replace(/^Q\d*[\.)]\s*/i, '').trim();
-                    // Split logic improved for spaces around slash
-                    const parts = cleanLine.split(/\s*\/\s*/);
-                    
-                    currentQ = {
-                        id: parsed.length + 1,
-                        topic: "General",
-                        question_en: parts[0],
-                        question_hi: parts.length > 1 ? parts[1] : parts[0],
-                        options_en: [],
-                        options_hi: [],
-                        correct: 0
-                    };
-                } 
-                // Regex for Option start: A-E followed by dot or paren
-                else if (currentQ && line.match(/^[A-E][\.)]/i)) {
-                    const cleanOpt = line.replace(/^[A-E][\.)]\s*/i, '').trim();
-                    const optParts = cleanOpt.split(/\s*\/\s*/);
-                    currentQ.options_en.push(optParts[0]);
-                    currentQ.options_hi.push(optParts.length > 1 ? optParts[1] : optParts[0]);
-                } 
-                // Regex for Answer start
-                else if (currentQ && (line.match(/^Ans[\.:]/i) || line.match(/^Answer:/i))) {
-                    const ansPart = line.replace(/^(Ans[\.:]|Answer:)\s*/i, '').trim().toUpperCase();
-                    const ansChar = ansPart.charAt(0);
-                    const mapping = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4 };
-                    if (mapping[ansChar] !== undefined) {
-                        currentQ.correct = mapping[ansChar];
-                    }
-                }
-            });
-            if (currentQ) parsed.push(currentQ);
-            return parsed;
-        };
-
         // --- SETUP COMPONENT ---
-        function SetupScreen({ onStart }) {
+        function SetupScreen({ onStart, onResume }) {
             const [inputText, setInputText] = useState(DEFAULT_INPUT_TEXT);
             const [error, setError] = useState("");
+            const [hasSavedState, setHasSavedState] = useState(false);
+
+            useEffect(() => {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) setHasSavedState(true);
+            }, []);
 
             const handleStart = () => {
                 try {
                     const questions = parseInputText(inputText);
                     if (questions.length === 0) {
-                        setError("No valid questions found. Please check format (Q. / A. / Ans.)");
+                        setError("No valid questions found.");
                         return;
                     }
-                    // Validate options count
-                    const invalidQ = questions.find(q => q.options_en.length < 2);
-                    if (invalidQ) {
-                        setError(`Question ${invalidQ.id} has insufficient options. Need at least 2.`);
+                    if (questions.some(q => q.options_en.length < 2)) {
+                        setError("Some questions have missing options.");
                         return;
                     }
+                    // Clear old state when starting new
+                    localStorage.removeItem(STORAGE_KEY);
                     onStart(questions);
                 } catch (e) {
-                    setError("Error parsing text. Please ensure correct format.");
+                    setError("Error parsing text.");
                 }
             };
 
             return (
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[85vh] border border-gray-200">
+                    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[85dvh] border border-gray-200">
                         <div className="bg-indigo-600 p-8 md:w-1/3 text-white flex flex-col justify-between hidden md:flex">
                             <div>
                                 <h1 className="text-3xl font-bold mb-4">Quiz Generator</h1>
-                                <p className="text-indigo-100 mb-6">Convert any text into a professional IBPS-style mock test instantly.</p>
-                                
+                                <p className="text-indigo-100 mb-6">Convert any text into a professional mock test.</p>
                                 <div className="bg-indigo-700/50 p-4 rounded-lg border border-indigo-500/30">
-                                    <h3 className="font-bold text-xs uppercase tracking-wider text-indigo-200 mb-3">Expected Format</h3>
-                                    <pre className="text-xs text-indigo-50 whitespace-pre-wrap font-mono leading-relaxed opacity-80">
-{`Q. Question English / हिंदी
+                                    <h3 className="font-bold text-xs uppercase tracking-wider text-indigo-200 mb-3">Format</h3>
+                                    <pre className="text-xs text-indigo-50 whitespace-pre-wrap font-mono opacity-80">{`Q. Question / प्रश्न
 A. Option 1
 B. Option 2
-C. Option 3
-D. Option 4
-Ans. B`}
-                                    </pre>
+Ans. A`}</pre>
                                 </div>
                             </div>
-                            <div className="text-xs text-indigo-300">Powered by Gemini AI • React • Tailwind</div>
                         </div>
 
                         <div className="p-6 md:w-2/3 flex flex-col h-full bg-white relative">
                             <h2 className="text-xl font-bold text-gray-800 mb-4 md:hidden">Create Quiz</h2>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="text-sm font-semibold text-gray-700">Paste Questions</label>
-                                <button onClick={() => setInputText('')} className="text-xs text-red-500 hover:text-red-700 font-medium">Clear All</button>
-                            </div>
                             
+                            {hasSavedState && (
+                                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex justify-between items-center animate-slide-up">
+                                    <span className="text-sm text-green-800 font-medium">Previous session found!</span>
+                                    <button onClick={onResume} className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded shadow transition">RESUME</button>
+                                </div>
+                            )}
+
+                            <label className="text-sm font-semibold text-gray-700 mb-2">Paste Questions</label>
                             <textarea 
-                                className="flex-1 w-full p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none custom-scroll bg-gray-50 text-gray-700"
+                                className="flex-1 w-full p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-indigo-500 resize-none custom-scroll bg-gray-50 text-gray-700"
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
                                 placeholder="Paste questions here..."
                             ></textarea>
                             
-                            {error && <div className="mt-3 p-3 bg-red-50 text-red-700 text-sm rounded border border-red-200 flex items-center"><i className="fas fa-exclamation-circle mr-2"></i> {error}</div>}
+                            {error && <div className="mt-3 p-2 text-red-600 text-sm font-medium">{error}</div>}
 
-                            <button 
-                                onClick={handleStart}
-                                className="mt-4 w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3.5 px-6 rounded-lg shadow-lg transform transition hover:scale-[1.01] flex items-center justify-center gap-2"
-                            >
-                                <span>START QUIZ</span>
+                            <button onClick={handleStart} className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-lg shadow-lg transition flex items-center justify-center gap-2">
+                                <span>START NEW QUIZ</span>
                                 <i className="fas fa-arrow-right"></i>
                             </button>
                         </div>
@@ -278,33 +261,23 @@ Ans. B`}
             const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
 
             const copyToClipboard = () => {
-                let text = `[Quiz Results]\nScore: ${score}/${total}\nDate: ${new Date().toLocaleString()}\n\n`;
+                let text = `[Results] Score: ${score}/${total}\n\n`;
                 detailedStats.forEach(stat => {
                     text += `Q${stat.id}: ${stat.questionText}\nTime: ${stat.time}s | Status: ${stat.status}\nCorrect: ${stat.correctOption} | Yours: ${stat.userOption}\n\n`;
                 });
-
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
                 textArea.style.position = "fixed"; textArea.style.left = "-9999px";
                 document.body.appendChild(textArea);
                 textArea.focus(); textArea.select();
-                try {
-                    document.execCommand('copy');
-                    alert('Results copied to clipboard!');
-                } catch (err) { alert("Failed to copy."); }
+                try { document.execCommand('copy'); alert('Copied!'); } catch (err) { alert("Failed."); }
                 document.body.removeChild(textArea);
             };
 
             const generateStudyPlan = async () => {
                 setIsGeneratingPlan(true);
                 const weakQuestions = detailedStats.filter(s => s.status === "Wrong");
-                let prompt = "";
-                if (weakQuestions.length === 0) {
-                     prompt = `I got full marks (${score}/${total}) in a quiz. Give me 3 tips to maintain this consistency.`;
-                } else {
-                    const weakTopics = weakQuestions.map(q => q.questionText.substring(0, 50)).join("\n");
-                    prompt = `I failed these questions:\n${weakTopics}\n\nGive me a 3-point study plan (Hindi/English mixed) to improve.`;
-                }
+                let prompt = weakQuestions.length === 0 ? "I got full marks. Give 3 tips." : `I failed these:\n${weakQuestions.map(q => q.questionText.substring(0,50)).join("\n")}\n\nGive 3-point study plan.`;
                 const response = await callGeminiText(prompt);
                 setStudyPlan(response);
                 setIsGeneratingPlan(false);
@@ -312,71 +285,30 @@ Ans. B`}
 
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden animate-slide-up">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90dvh] flex flex-col overflow-hidden animate-slide-up">
                         <div className="bg-gray-900 text-white p-4 flex justify-between items-center shrink-0">
-                            <h2 className="text-lg font-bold">Result Summary</h2>
-                            <button onClick={onClose} className="hover:text-gray-300"><i className="fas fa-times fa-lg"></i></button>
+                            <h2 className="text-lg font-bold">Results</h2>
+                            <button onClick={onClose}><i className="fas fa-times fa-lg"></i></button>
                         </div>
-                        
                         <div className="p-6 overflow-y-auto flex-1 custom-scroll bg-gray-50">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm text-center">
-                                    <div className="text-4xl font-extrabold text-gray-800 mb-1">{score}</div>
-                                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Score</div>
-                                </div>
-                                <div className="bg-white p-5 rounded-lg border border-green-200 shadow-sm text-center">
-                                    <div className="text-4xl font-extrabold text-green-600 mb-1">{detailedStats.filter(s => s.status === 'Correct').length}</div>
-                                    <div className="text-xs font-semibold text-green-600 uppercase tracking-wide">Correct</div>
-                                </div>
-                                 <div className="bg-white p-5 rounded-lg border border-red-200 shadow-sm text-center">
-                                    <div className="text-4xl font-extrabold text-red-600 mb-1">{detailedStats.filter(s => s.status === 'Wrong').length}</div>
-                                    <div className="text-xs font-semibold text-red-600 uppercase tracking-wide">Wrong</div>
-                                </div>
+                            <div className="flex justify-center gap-4 mb-6 text-center">
+                                <div className="bg-white p-4 rounded-lg border shadow-sm flex-1"><div className="text-3xl font-bold text-gray-800">{score}</div><div className="text-xs font-bold text-gray-500 uppercase">Score</div></div>
+                                <div className="bg-white p-4 rounded-lg border shadow-sm flex-1"><div className="text-3xl font-bold text-green-600">{detailedStats.filter(s=>s.status==='Correct').length}</div><div className="text-xs font-bold text-green-600 uppercase">Correct</div></div>
+                                <div className="bg-white p-4 rounded-lg border shadow-sm flex-1"><div className="text-3xl font-bold text-red-600">{detailedStats.filter(s=>s.status==='Wrong').length}</div><div className="text-xs font-bold text-red-600 uppercase">Wrong</div></div>
                             </div>
-
-                            <div className="mb-6 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                                <div className="p-4 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
-                                    <h3 className="font-bold text-indigo-900 flex items-center"><i className="fas fa-brain mr-2"></i> AI Analysis</h3>
-                                    {!studyPlan && (
-                                        <button onClick={generateStudyPlan} disabled={isGeneratingPlan} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-2 px-3 rounded shadow transition">
-                                            {isGeneratingPlan ? 'Thinking...' : 'Analyze Mistakes'}
-                                        </button>
-                                    )}
+                            <div className="mb-6 bg-white border rounded-lg shadow-sm">
+                                <div className="p-3 bg-indigo-50 border-b flex justify-between items-center">
+                                    <h3 className="font-bold text-indigo-900"><i className="fas fa-brain mr-2"></i>AI Analysis</h3>
+                                    {!studyPlan && <button onClick={generateStudyPlan} disabled={isGeneratingPlan} className="bg-indigo-600 text-white text-xs py-1.5 px-3 rounded">{isGeneratingPlan ? '...' : 'Analyze'}</button>}
                                 </div>
-                                {studyPlan && <div className="p-4 text-sm text-gray-700 whitespace-pre-line leading-relaxed">{studyPlan}</div>}
+                                {studyPlan && <div className="p-4 text-sm whitespace-pre-line">{studyPlan}</div>}
                             </div>
-
-                            <button onClick={copyToClipboard} className="w-full mb-6 bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
-                                <i className="fas fa-clipboard"></i> Copy Detailed Report
-                            </button>
-
-                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full text-sm text-left text-gray-600">
-                                        <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-                                            <tr>
-                                                <th className="px-4 py-3 border-b">Q</th>
-                                                <th className="px-4 py-3 border-b">Status</th>
-                                                <th className="px-4 py-3 border-b">Time</th>
-                                                <th className="px-4 py-3 border-b">Answer</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100">
-                                            {detailedStats.map((stat) => (
-                                                <tr key={stat.id} className="hover:bg-gray-50">
-                                                    <td className="px-4 py-3 font-medium text-gray-900">{stat.id}</td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`px-2 py-1 rounded text-xs font-bold ${stat.status === 'Correct' ? 'bg-green-100 text-green-700' : stat.status === 'Wrong' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-                                                            {stat.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3 font-mono">{stat.time}s</td>
-                                                    <td className="px-4 py-3 text-xs text-gray-500 truncate max-w-[150px]" title={stat.correctOption}>{stat.correctOption}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <button onClick={copyToClipboard} className="w-full mb-6 bg-gray-800 text-white font-bold py-3 rounded-lg shadow">Copy Report</button>
+                            <div className="bg-white rounded-lg border overflow-hidden">
+                                <table className="min-w-full text-sm text-left">
+                                    <thead className="bg-gray-100 uppercase text-xs text-gray-600"><tr><th className="px-4 py-3">Q</th><th className="px-4 py-3">Time</th><th className="px-4 py-3">Result</th></tr></thead>
+                                    <tbody className="divide-y">{detailedStats.map(s => (<tr key={s.id}><td className="px-4 py-3">{s.id}</td><td className="px-4 py-3">{s.time}s</td><td className={`px-4 py-3 font-bold ${s.status === 'Correct' ? 'text-green-600' : s.status === 'Wrong' ? 'text-red-600' : 'text-gray-500'}`}>{s.status}</td></tr>))}</tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -386,17 +318,20 @@ Ans. B`}
 
         // --- MAIN APP ---
         function App() {
-            const [quizStarted, setQuizStarted] = useState(false);
+            // App State
+            const [view, setView] = useState('setup'); // setup, quiz, result
             const [examData, setExamData] = useState([]);
+            
+            // Quiz State
             const [currentQIndex, setCurrentQIndex] = useState(0);
             const [userAnswers, setUserAnswers] = useState({});
             const [qStatus, setQStatus] = useState([]); 
             const [timeSpent, setTimeSpent] = useState([]);
             const [totalTime, setTotalTime] = useState(0); 
-            const [isExamActive, setIsExamActive] = useState(true);
-            const [showResult, setShowResult] = useState(false);
+            const [isExamActive, setIsExamActive] = useState(false);
             const [showPaletteMobile, setShowPaletteMobile] = useState(false);
             
+            // AI
             const [hint, setHint] = useState("");
             const [isFetchingHint, setIsFetchingHint] = useState(false);
             const [isSpeaking, setIsSpeaking] = useState(false);
@@ -404,31 +339,60 @@ Ans. B`}
             const timerRef = useRef(null);
             const contentRef = useRef(null);
 
+            // --- LOAD STATE ---
+            const resumeQuiz = () => {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    setExamData(data.examData);
+                    setCurrentQIndex(data.currentQIndex);
+                    setUserAnswers(data.userAnswers);
+                    setQStatus(data.qStatus);
+                    setTimeSpent(data.timeSpent);
+                    setTotalTime(data.totalTime);
+                    setIsExamActive(data.isExamActive);
+                    setView('quiz');
+                }
+            };
+
             const startQuiz = (questions) => {
                 setExamData(questions);
                 setQStatus(Array(questions.length).fill('not_visited'));
                 setTimeSpent(Array(questions.length).fill(0));
                 setTotalTime(Math.ceil(questions.length * 0.75 * 60)); 
-                setQuizStarted(true);
+                setCurrentQIndex(0);
+                setUserAnswers({});
+                setIsExamActive(true);
+                setView('quiz');
             };
 
+            // --- SAVE STATE ---
             useEffect(() => {
-                if (quizStarted && isExamActive && qStatus.length > 0 && qStatus[0] === 'not_visited') {
-                    const newStatus = [...qStatus];
-                    newStatus[0] = 'not_answered';
-                    setQStatus(newStatus);
+                if (view === 'quiz' && isExamActive) {
+                    const stateToSave = {
+                        examData, currentQIndex, userAnswers, qStatus, timeSpent, totalTime, isExamActive
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
                 }
-            }, [quizStarted, isExamActive, qStatus]);
+            }, [examData, currentQIndex, userAnswers, qStatus, timeSpent, totalTime, isExamActive, view]);
 
+            // --- TIMER ---
             useEffect(() => {
-                if (quizStarted && isExamActive && totalTime > 0) {
+                if (view === 'quiz' && isExamActive && totalTime > 0) {
                     timerRef.current = setInterval(() => {
                         setTotalTime(prev => { if (prev <= 1) { handleSubmitExam(); return 0; } return prev - 1; });
                         setTimeSpent(prev => { const newTimes = [...prev]; newTimes[currentQIndex] += 1; return newTimes; });
                     }, 1000);
                 }
                 return () => clearInterval(timerRef.current);
-            }, [quizStarted, isExamActive, currentQIndex, totalTime]);
+            }, [view, isExamActive, currentQIndex, totalTime]);
+
+            // --- EFFECTS ---
+            useEffect(() => {
+                if (view === 'quiz' && isExamActive && qStatus.length > 0 && qStatus[0] === 'not_visited') {
+                    const newStatus = [...qStatus]; newStatus[0] = 'not_answered'; setQStatus(newStatus);
+                }
+            }, [view, isExamActive]);
 
             useEffect(() => {
                 setHint("");
@@ -437,31 +401,29 @@ Ans. B`}
                 if (contentRef.current) contentRef.current.scrollTop = 0;
             }, [currentQIndex]);
 
-            const handleOptionSelect = (optIndex) => {
-                // IMPORTANT: This state update triggers re-render, checking the radio button
-                setUserAnswers(prev => ({ ...prev, [currentQIndex]: optIndex }));
+            // --- HANDLERS ---
+            const handleOptionSelect = (optIndex) => setUserAnswers(prev => ({ ...prev, [currentQIndex]: optIndex }));
+
+            const updateStatusAndNav = (nextIndex, statusType) => {
+                const newStatus = [...qStatus];
+                newStatus[currentQIndex] = statusType;
+                if (nextIndex !== null) {
+                    if (newStatus[nextIndex] === 'not_visited') newStatus[nextIndex] = 'not_answered';
+                    setCurrentQIndex(nextIndex);
+                }
+                setQStatus(newStatus);
             };
 
             const handleSaveNext = () => {
-                const newStatus = [...qStatus];
-                newStatus[currentQIndex] = userAnswers[currentQIndex] !== undefined ? 'answered' : 'not_answered';
-                if (currentQIndex < examData.length - 1) {
-                    const nextIndex = currentQIndex + 1;
-                    if (newStatus[nextIndex] === 'not_visited') newStatus[nextIndex] = 'not_answered';
-                    setCurrentQIndex(nextIndex);
-                }
-                setQStatus(newStatus);
+                const status = userAnswers[currentQIndex] !== undefined ? 'answered' : 'not_answered';
+                const next = currentQIndex < examData.length - 1 ? currentQIndex + 1 : null;
+                updateStatusAndNav(next, status);
             };
 
             const handleMarkReview = () => {
-                const newStatus = [...qStatus];
-                newStatus[currentQIndex] = userAnswers[currentQIndex] !== undefined ? 'marked_answered' : 'marked';
-                if (currentQIndex < examData.length - 1) {
-                    const nextIndex = currentQIndex + 1;
-                    if (newStatus[nextIndex] === 'not_visited') newStatus[nextIndex] = 'not_answered';
-                    setCurrentQIndex(nextIndex);
-                }
-                setQStatus(newStatus);
+                const status = userAnswers[currentQIndex] !== undefined ? 'marked_answered' : 'marked';
+                const next = currentQIndex < examData.length - 1 ? currentQIndex + 1 : null;
+                updateStatusAndNav(next, status);
             };
 
             const handleClearResponse = () => {
@@ -479,14 +441,18 @@ Ans. B`}
                 setShowPaletteMobile(false);
             };
 
-            const handlePrev = () => { if (currentQIndex > 0) handleNavigation(currentQIndex - 1); };
-            const handleSubmitExam = () => { clearInterval(timerRef.current); setIsExamActive(false); setShowResult(true); };
+            const handleSubmitExam = () => {
+                clearInterval(timerRef.current);
+                setIsExamActive(false);
+                setView('result');
+                localStorage.removeItem(STORAGE_KEY); // Clear saved state on finish
+            };
 
             const getAIHint = async () => {
                 if (hint) return;
                 setIsFetchingHint(true);
                 const q = examData[currentQIndex];
-                const prompt = `Explain briefly without giving the answer. Question: "${q.question_en}"`;
+                const prompt = `Explain concept briefly (no answer). Q: "${q.question_en}"`;
                 const response = await callGeminiText(prompt);
                 setHint(response);
                 setIsFetchingHint(false);
@@ -496,132 +462,109 @@ Ans. B`}
                 if (isSpeaking) { if (audioRef.current) audioRef.current.pause(); setIsSpeaking(false); return; }
                 setIsSpeaking(true);
                 const q = examData[currentQIndex];
-                let textToRead = `Question ${currentQIndex + 1}. ${q.question_en}. `;
-                q.options_en.forEach((opt, i) => textToRead += `Option ${i+1}: ${opt}. `);
-                const audioUrl = await callGeminiTTS(textToRead);
-                if (audioUrl) {
-                    const audio = new Audio(audioUrl);
-                    audioRef.current = audio;
-                    audio.onended = () => setIsSpeaking(false);
-                    audio.play();
-                } else { setIsSpeaking(false); alert("TTS Unavailable"); }
+                let text = `Q${currentQIndex + 1}. ${q.question_en}. `;
+                q.options_en.forEach((opt, i) => text += `Option ${i+1}: ${opt}. `);
+                const url = await callGeminiTTS(text);
+                if (url) { const audio = new Audio(url); audioRef.current = audio; audio.onended = () => setIsSpeaking(false); audio.play(); } 
+                else { setIsSpeaking(false); alert("TTS Unavailable"); }
             };
 
-            const formatTime = (seconds) => {
-                const m = Math.floor(seconds / 60);
-                const s = seconds % 60;
-                return `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
-            };
-
-            const getStatusClass = (status, index) => {
-                if(index === currentQIndex) return "border-2 border-indigo-600 animate-pulse";
-                switch (status) {
-                    case 'answered': return 'status-answered';
-                    case 'not_answered': return 'status-not-answered';
-                    case 'marked': return 'status-marked';
-                    case 'marked_answered': return 'status-marked-answered';
-                    default: return 'status-not-visited';
-                }
+            const formatTime = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+            const getStatusClass = (s, i) => {
+                if(i===currentQIndex) return "border-2 border-indigo-600";
+                return s==='answered'?'status-answered':s==='not_answered'?'status-not-answered':s==='marked'?'status-marked':s==='marked_answered'?'status-marked-answered':'status-not-visited';
             };
 
             const calculateResults = () => {
                 let score = 0;
                 const stats = examData.map((q, idx) => {
-                    const userAns = userAnswers[idx];
-                    let statusStr = "Skipped";
-                    let userOptionText = "Not Attempted";
-                    if (userAns !== undefined) {
-                        userOptionText = q.options_en[userAns] || `Option ${userAns+1}`;
-                        if (userAns === q.correct) { score += 1; statusStr = "Correct"; } else { score -= 0.25; statusStr = "Wrong"; }
+                    const ans = userAnswers[idx];
+                    let st = "Skipped", uOpt = "None";
+                    if (ans !== undefined) {
+                        uOpt = q.options_en[ans] || `Opt ${ans+1}`;
+                        if (ans === q.correct) { score += 1; st = "Correct"; } else { score -= 0.25; st = "Wrong"; }
                     }
-                    return { id: q.id, questionText: q.question_en, status: statusStr, time: timeSpent[idx], correctOption: q.options_en[q.correct], userOption: userOptionText };
+                    return { id: q.id, questionText: q.question_en, status: st, time: timeSpent[idx], correctOption: q.options_en[q.correct], userOption: uOpt };
                 });
                 return { score: Math.max(0, score), stats, total: examData.length };
             };
 
-            if (!quizStarted) return <SetupScreen onStart={startQuiz} />;
-            const results = showResult ? calculateResults() : null;
+            // --- RENDER VIEWS ---
+            if (view === 'setup') return <SetupScreen onStart={startQuiz} onResume={resumeQuiz} />;
+            
+            if (view === 'result') {
+                const res = calculateResults();
+                return <ResultModal score={res.score} total={res.total} detailedStats={res.stats} onClose={() => setView('setup')} />;
+            }
+
             const currentQ = examData[currentQIndex];
 
             return (
                 <div className="flex flex-col h-full w-full bg-gray-100">
-                    <header className="bg-indigo-700 text-white p-2 px-4 shadow-md flex justify-between items-center z-20 shrink-0">
-                        <div><h1 className="text-lg font-bold">Mock Test</h1><span className="text-xs opacity-80">IBPS Mode</span></div>
-                        <div className="bg-indigo-900 px-3 py-1 rounded border border-indigo-500 font-mono text-xl font-bold text-yellow-400">{formatTime(totalTime)}</div>
+                    {/* HEADER */}
+                    <header className="bg-indigo-700 text-white p-2 px-4 shadow-md flex justify-between items-center z-20 shrink-0 h-14">
+                        <div className="font-bold text-lg">Mock Test</div>
+                        <div className="bg-indigo-900 px-3 py-1 rounded border border-indigo-500 font-mono font-bold text-yellow-400">{formatTime(totalTime)}</div>
                     </header>
 
-                    <div className="flex-1 flex overflow-hidden relative w-full">
+                    {/* BODY */}
+                    <div className="flex-1 flex overflow-hidden w-full">
+                        {/* LEFT: QUESTION */}
                         <div className="flex-1 flex flex-col bg-white h-full relative">
-                            <div className="border-b px-4 py-3 flex justify-between items-center bg-gray-50 shrink-0 z-10">
-                                <span className="font-bold text-lg text-gray-800">Q.{currentQIndex + 1}</span>
-                                <div className="flex items-center gap-2"><span className="text-xs text-gray-500 uppercase">Time</span><div className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-sm font-bold border border-yellow-200">{formatTime(timeSpent[currentQIndex])}</div></div>
+                            <div className="border-b px-4 py-2 flex justify-between items-center bg-gray-50 shrink-0 h-12">
+                                <span className="font-bold text-gray-800">Q.{currentQIndex + 1}</span>
+                                <div className="text-xs font-bold text-yellow-700 bg-yellow-100 px-2 py-1 rounded border border-yellow-200">{formatTime(timeSpent[currentQIndex])}</div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto custom-scroll p-4 pb-24" ref={contentRef}>
+                            <div className="flex-1 overflow-y-auto custom-scroll p-4 pb-20" ref={contentRef}>
                                 <div className="mb-6 relative">
                                     <div className="absolute top-0 right-0 flex gap-2">
-                                        <button onClick={speakQuestion} className={`w-8 h-8 rounded-full flex items-center justify-center border transition ${isSpeaking ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-white text-gray-600 hover:bg-gray-50'}`}><i className={`fas ${isSpeaking ? 'fa-stop' : 'fa-volume-up'}`}></i></button>
-                                        <button onClick={getAIHint} className="w-8 h-8 bg-yellow-50 text-yellow-600 border border-yellow-200 rounded-full flex items-center justify-center hover:bg-yellow-100"><i className="fas fa-lightbulb"></i></button>
+                                        <button onClick={speakQuestion} className={`w-8 h-8 rounded-full border flex items-center justify-center ${isSpeaking?'bg-red-50 text-red-600 border-red-200 animate-pulse':'bg-white text-gray-600'}`}><i className={`fas ${isSpeaking?'fa-stop':'fa-volume-up'}`}></i></button>
+                                        <button onClick={getAIHint} className="w-8 h-8 bg-yellow-50 text-yellow-600 border border-yellow-200 rounded-full flex items-center justify-center"><i className="fas fa-lightbulb"></i></button>
                                     </div>
-                                    <div className="pr-20 text-lg font-medium text-gray-900 pb-2"><span className="text-indigo-600 font-bold mr-2">Q.</span>{currentQ.question_en}</div>
-                                    {currentQ.question_hi && currentQ.question_hi !== currentQ.question_en && <div className="text-lg font-medium text-gray-700 bg-gray-50 p-3 rounded-lg border mt-2"><span className="text-indigo-600 font-bold mr-2">प्र.</span>{currentQ.question_hi}</div>}
-                                    {(hint || isFetchingHint) && <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-900 animate-slide-up"><div className="font-bold mb-1"><i className="fas fa-robot mr-2"></i> Hint:</div>{isFetchingHint ? 'Thinking...' : hint}</div>}
+                                    <div className="pr-16 text-lg font-medium text-gray-900"><span className="text-indigo-600 font-bold mr-2">Q.</span>{currentQ.question_en}</div>
+                                    {currentQ.question_hi && currentQ.question_hi !== currentQ.question_en && <div className="mt-2 p-3 bg-gray-50 rounded border text-gray-800 question-text-hi">{currentQ.question_hi}</div>}
+                                    {(hint || isFetchingHint) && <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-900 animate-slide-up"><b>Hint:</b> {isFetchingHint ? '...' : hint}</div>}
                                 </div>
 
                                 <div className="space-y-3">
                                     {currentQ.options_en.map((opt, idx) => (
-                                        <div 
-                                            key={idx} 
-                                            onClick={() => handleOptionSelect(idx)}
-                                            className={`flex items-start p-3 border rounded-lg cursor-pointer transition hover:shadow-sm ${userAnswers[currentQIndex] === idx ? 'bg-indigo-50 border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-200 bg-white'}`}
-                                        >
-                                            <input 
-                                                type="radio" 
-                                                name={`q-${currentQIndex}`} 
-                                                className="mt-1.5 mr-3 w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                                checked={userAnswers[currentQIndex] === idx}
-                                                onChange={() => handleOptionSelect(idx)}
-                                            />
-                                            <div className="w-full">
-                                                <div className="text-base font-medium text-gray-800">{opt}</div>
-                                                {currentQ.options_hi[idx] && currentQ.options_hi[idx] !== opt && <div className="text-sm text-gray-500 mt-0.5">{currentQ.options_hi[idx]}</div>}
-                                            </div>
+                                        <div key={idx} onClick={() => handleOptionSelect(idx)} className={`flex p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${userAnswers[currentQIndex]===idx?'bg-indigo-50 border-indigo-500 ring-1 ring-indigo-500':'bg-white'}`}>
+                                            <input type="radio" checked={userAnswers[currentQIndex]===idx} readOnly className="mt-1 mr-3" />
+                                            <div><div className="font-medium text-gray-800">{opt}</div>{currentQ.options_hi[idx] !== opt && <div className="text-sm text-gray-500 question-text-hi">{currentQ.options_hi[idx]}</div>}</div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            <div className="border-t p-3 bg-white flex justify-between items-center shrink-0 z-20 shadow-sm">
+                            {/* FOOTER - FIXED BOTTOM */}
+                            <div className="border-t p-2 bg-white flex justify-between items-center shrink-0 h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30 w-full absolute bottom-0 left-0">
                                 <div className="flex gap-2">
-                                    <button onClick={handleClearResponse} className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-semibold border border-gray-200">Clear</button>
-                                    <button onClick={handleMarkReview} className="px-3 py-2 text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded text-sm font-semibold">Review</button>
+                                    <button onClick={handleClearResponse} className="px-3 py-2 text-sm font-bold text-gray-600 border rounded hover:bg-gray-50">Clear</button>
+                                    <button onClick={handleMarkReview} className="px-3 py-2 text-sm font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded">Review</button>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={handlePrev} disabled={currentQIndex === 0} className={`px-4 py-2 rounded text-sm font-semibold ${currentQIndex === 0 ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-gray-200 hover:bg-gray-300'}`}>Back</button>
-                                    <button onClick={handleSaveNext} className="px-5 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold shadow text-sm">Save & Next</button>
+                                    <button onClick={() => handleNavigation(currentQIndex-1)} disabled={currentQIndex===0} className="px-4 py-2 text-sm font-bold bg-gray-200 text-gray-700 rounded disabled:opacity-50">Back</button>
+                                    <button onClick={handleSaveNext} className="px-5 py-2 text-sm font-bold bg-indigo-600 text-white rounded shadow">Save & Next</button>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="hidden md:flex flex-col w-72 bg-gray-50 border-l border-gray-200 shrink-0">
-                            <div className="bg-white p-3 font-bold text-center border-b shadow-sm text-gray-700">Palette</div>
+                        {/* RIGHT: PALETTE */}
+                        <div className="hidden md:flex flex-col w-72 bg-gray-50 border-l shrink-0">
+                            <div className="bg-white p-3 font-bold text-center border-b text-gray-700">Palette</div>
                             <div className="flex-1 p-4 overflow-y-auto custom-scroll grid grid-cols-5 gap-2 content-start">
                                 {examData.map((q, idx) => (
-                                    <button key={q.id} onClick={() => handleNavigation(idx)} className={`h-9 w-9 flex items-center justify-center text-sm font-bold shadow-sm rounded ${getStatusClass(qStatus[idx], idx)}`}>{idx + 1}</button>
+                                    <button key={q.id} onClick={() => handleNavigation(idx)} className={`h-9 w-9 text-sm font-bold shadow-sm rounded ${getStatusClass(qStatus[idx], idx)}`}>{idx + 1}</button>
                                 ))}
                             </div>
-                            <div className="p-3 bg-white border-t text-xs space-y-2">
-                                <div className="flex items-center"><span className="w-3 h-3 bg-green-500 rounded-sm mr-2"></span>Answered</div>
-                                <div className="flex items-center"><span className="w-3 h-3 bg-red-500 rounded-sm mr-2"></span>Not Answered</div>
-                                <div className="flex items-center"><span className="w-3 h-3 bg-purple-600 rounded-full mr-2"></span>Marked</div>
-                            </div>
-                            <div className="p-4 bg-gray-100 border-t"><button onClick={handleSubmitExam} className="w-full py-2 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700">SUBMIT</button></div>
+                            <div className="p-4 border-t bg-gray-100"><button onClick={handleSubmitExam} className="w-full py-2 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700">SUBMIT</button></div>
                         </div>
                     </div>
 
+                    {/* MOBILE PALETTE */}
                     {showPaletteMobile && <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setShowPaletteMobile(false)}><div className="absolute bottom-0 w-full bg-white rounded-t-2xl p-4 h-3/4 flex flex-col animate-slide-up" onClick={e => e.stopPropagation()}><div className="flex justify-between mb-4"><h3 className="font-bold">Palette</h3><button onClick={() => setShowPaletteMobile(false)}><i className="fas fa-times"></i></button></div><div className="flex-1 overflow-y-auto grid grid-cols-5 gap-3 content-start custom-scroll">{examData.map((q, idx) => (<button key={q.id} onClick={() => handleNavigation(idx)} className={`h-10 w-10 font-bold shadow-sm rounded ${getStatusClass(qStatus[idx], idx)}`}>{idx + 1}</button>))}</div><button onClick={handleSubmitExam} className="mt-4 w-full py-3 bg-green-600 text-white font-bold rounded">SUBMIT</button></div></div>}
-                    <button onClick={() => setShowPaletteMobile(true)} className="md:hidden fixed bottom-24 right-4 bg-indigo-600 text-white p-4 rounded-full shadow-xl z-30"><i className="fas fa-th-large"></i></button>
-                    {showResult && <ResultModal score={results.score} total={results.total} detailedStats={results.stats} onClose={() => window.location.reload()} />}
+                    <button onClick={() => setShowPaletteMobile(true)} className="md:hidden fixed bottom-20 right-4 bg-indigo-600 text-white p-4 rounded-full shadow-xl z-30"><i className="fas fa-th-large"></i></button>
                 </div>
             );
         }
